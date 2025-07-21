@@ -71,14 +71,14 @@ jobs:
       run: |
         cd ${{ env.WORKSPACE }}
         echo "Downloading L4T Driver Package..."
-        wget -O Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2 \
+        wget -q --show-progress -O Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2 \
           ${{ env.L4T_BSP_URL }}
 
     - name: Download Sample Root Filesystem
       run: |
         cd ${{ env.WORKSPACE }}
         echo "Downloading Sample Root Filesystem..."
-        wget -O Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2 \
+        wget -q --show-progress -O Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2 \
           ${{ env.L4T_ROOTFS_URL }}
 
     - name: Extract L4T packages
