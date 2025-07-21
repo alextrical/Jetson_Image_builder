@@ -112,13 +112,6 @@ jobs:
         echo "Downloading Sample Root Filesystem..."
         wget -q --show-progress -O Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2 ${{ env.L4T_ROOTFS_URL }}
 
-    - name: Download Sample Root Filesystem
-      run: |
-        cd ${{ env.WORKSPACE }}
-        echo "Downloading Sample Root Filesystem..."
-        wget -q --show-progress -O Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2 \
-          ${{ env.L4T_ROOTFS_URL }}
-
     - name: Extract L4T packages
       run: |
         cd ${{ env.WORKSPACE }}
