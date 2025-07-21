@@ -61,7 +61,8 @@ jobs:
           bc \
           build-essential \
           device-tree-compiler \
-          libxml2-utils
+          libxml2-utils \
+          xmlstarlet
 
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@main
@@ -79,12 +80,37 @@ jobs:
         sudo update-binfmts --enable qemu-aarch64
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
+    # Cache L4T Driver Package (BSP)
+    - name: Cache L4T BSP
+      id: cache-bsp
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.WORKSPACE }}/Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2
+        key: bsp-${{ env.L4T_VERSION }}
+
+    # Download if BSP cache miss
     - name: Download L4T Driver Package (BSP)
+      if: steps.cache-bsp.outputs.cache-hit != 'true'
       run: |
         cd ${{ env.WORKSPACE }}
         echo "Downloading L4T Driver Package..."
-        wget -q --show-progress -O Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2 \
-          ${{ env.L4T_BSP_URL }}
+        wget -q --show-progress -O Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2 ${{ env.L4T_BSP_URL }}
+
+    # Cache Sample Root Filesystem
+    - name: Cache Sample RootFS
+      id: cache-rootfs
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.WORKSPACE }}/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2
+        key: rootfs-${{ env.L4T_VERSION }}
+
+    # Download if RootFS cache miss
+    - name: Download Sample Root Filesystem
+      if: steps.cache-rootfs.outputs.cache-hit != 'true'
+      run: |
+        cd ${{ env.WORKSPACE }}
+        echo "Downloading Sample Root Filesystem..."
+        wget -q --show-progress -O Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2 ${{ env.L4T_ROOTFS_URL }}
 
     - name: Download Sample Root Filesystem
       run: |
