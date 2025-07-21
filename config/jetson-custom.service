@@ -1,0 +1,29 @@
+[Unit]
+Description=Custom Jetson Application
+After=multi-user.target network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=jetson
+Group=jetson
+WorkingDirectory=/opt/custom
+ExecStart=/opt/custom/app.py
+Restart=always
+RestartSec=5
+Environment=PYTHONPATH=/opt/custom
+Environment=DISPLAY=:0.0
+
+# Resource limits
+CPUQuota=50%
+MemoryLimit=1G
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/custom/data /tmp
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,369 @@
+name: Build Jetson Orin Nano SD Card Image
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      l4t_version:
+        description: 'L4T Version (default: 36.4.3)'
+        required: false
+        default: '36.4.3'
+      image_name:
+        description: 'Output image name'
+        required: false
+        default: 'jetson-orin-nano-custom'
+
+env:
+  L4T_VERSION: 36.4.3
+  L4T_BSP_URL: https://developer.nvidia.com/downloads/embedded/l4t/r36_release_v4.3/release/Jetson_Linux_r36.4.3_aarch64.tbz2
+  L4T_ROOTFS_URL: https://developer.nvidia.com/downloads/embedded/l4t/r36_release_v4.3/release/Tegra_Linux_Sample-Root-Filesystem_r36.4.3_aarch64.tbz2
+  WORKSPACE: /workspace
+
+jobs:
+  build-jetson-image:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up workspace
+      run: |
+        sudo mkdir -p ${{ env.WORKSPACE }}
+        sudo chown $USER:$USER ${{ env.WORKSPACE }}
+        cd ${{ env.WORKSPACE }}
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          wget \
+          curl \
+          tar \
+          bzip2 \
+          lbzip2 \
+          python3 \
+          python3-pip \
+          qemu-user-static \
+          binfmt-support \
+          debootstrap \
+          parted \
+          kpartx \
+          gdisk \
+          dosfstools \
+          e2fsprogs \
+          sudo \
+          rsync \
+          bc \
+          build-essential \
+          device-tree-compiler
+
+    - name: Set up QEMU for ARM64 emulation
+      run: |
+        sudo update-binfmts --enable qemu-aarch64
+        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+    - name: Download L4T Driver Package (BSP)
+      run: |
+        cd ${{ env.WORKSPACE }}
+        echo "Downloading L4T Driver Package..."
+        wget -O Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2 \
+          ${{ env.L4T_BSP_URL }}
+
+    - name: Download Sample Root Filesystem
+      run: |
+        cd ${{ env.WORKSPACE }}
+        echo "Downloading Sample Root Filesystem..."
+        wget -O Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2 \
+          ${{ env.L4T_ROOTFS_URL }}
+
+    - name: Extract L4T packages
+      run: |
+        cd ${{ env.WORKSPACE }}
+
+        echo "Extracting L4T Driver Package..."
+        tar -xf Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2
+
+        echo "Extracting Sample Root Filesystem..."
+        cd Linux_for_Tegra/rootfs/
+        sudo tar -xpf ../../Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2
+        cd ../..
+
+    - name: Add custom packages to rootfs
+      run: |
+        cd ${{ env.WORKSPACE }}/Linux_for_Tegra
+
+        # Install additional packages in rootfs using chroot
+        echo "Setting up chroot environment..."
+        sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
+
+        # Mount necessary filesystems for chroot
+        sudo mount --bind /dev rootfs/dev/
+        sudo mount --bind /sys rootfs/sys/
+        sudo mount --bind /proc rootfs/proc/
+        sudo mount --bind /dev/pts rootfs/dev/pts/
+
+        # Copy resolv.conf for network access in chroot
+        sudo cp /etc/resolv.conf rootfs/etc/resolv.conf.bak
+        sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
+
+        # Create script to install packages in chroot
+        cat > install_packages.sh << 'EOF'
+        #!/bin/bash
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update
+        apt-get install -y \
+          curl \
+          wget \
+          git \
+          vim \
+          htop \
+          build-essential \
+          cmake \
+          python3-dev \
+          python3-pip \
+          python3-setuptools \
+          nodejs \
+          npm \
+          docker.io \
+          openssh-server \
+          can-utils \
+          i2c-tools \
+          net-tools \
+          wireless-tools \
+          network-manager
+
+        # Install Python packages
+        pip3 install \
+          numpy \
+          opencv-python \
+          flask \
+          requests \
+          pyyaml
+
+        # Clean up
+        apt-get clean
+        rm -rf /var/lib/apt/lists/*
+        EOF
+
+        # Make script executable and run it in chroot
+        chmod +x install_packages.sh
+        sudo cp install_packages.sh rootfs/tmp/
+        sudo chroot rootfs /tmp/install_packages.sh
+
+        # Clean up chroot
+        sudo rm rootfs/tmp/install_packages.sh
+        sudo rm rootfs/etc/resolv.conf
+        sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
+
+        # Unmount filesystems
+        sudo umount rootfs/dev/pts/ || true
+        sudo umount rootfs/dev/ || true
+        sudo umount rootfs/sys/ || true
+        sudo umount rootfs/proc/ || true
+
+    - name: Copy custom files to rootfs
+      run: |
+        cd ${{ env.WORKSPACE }}/Linux_for_Tegra
+
+        # Copy any custom files from repository to rootfs
+        if [ -d "${{ github.workspace }}/rootfs-overlay" ]; then
+          echo "Copying custom files from rootfs-overlay..."
+          sudo cp -r ${{ github.workspace }}/rootfs-overlay/* rootfs/
+        fi
+
+        # Create custom startup script
+        sudo mkdir -p rootfs/opt/custom
+        cat > custom_startup.sh << 'EOF'
+        #!/bin/bash
+        # Custom startup script for Jetson Orin Nano
+        echo "Starting custom Jetson Orin Nano initialization..."
+
+        # Enable SSH
+        systemctl enable ssh
+        systemctl start ssh
+
+        # Set up Docker
+        usermod -aG docker $USER
+
+        # Custom hardware initialization
+        # Add your custom hardware setup here
+
+        echo "Custom initialization completed!"
+        EOF
+
+        sudo cp custom_startup.sh rootfs/opt/custom/
+        sudo chmod +x rootfs/opt/custom/custom_startup.sh
+
+        # Add to systemd for automatic execution
+        cat > jetson-custom-init.service << 'EOF'
+        [Unit]
+        Description=Jetson Custom Initialization
+        After=multi-user.target
+
+        [Service]
+        Type=oneshot
+        ExecStart=/opt/custom/custom_startup.sh
+        RemainAfterExit=yes
+
+        [Install]
+        WantedBy=multi-user.target
+        EOF
+
+        sudo cp jetson-custom-init.service rootfs/etc/systemd/system/
+        sudo chroot rootfs systemctl enable jetson-custom-init.service
+
+    - name: Apply NVIDIA proprietary binaries
+      run: |
+        cd ${{ env.WORKSPACE }}/Linux_for_Tegra
+
+        echo "Applying NVIDIA L4T binaries..."
+        sudo ./apply_binaries.sh
+
+        # Verify the script completed successfully
+        if [ $? -eq 0 ]; then
+          echo "✅ NVIDIA binaries applied successfully"
+        else
+          echo "❌ Failed to apply NVIDIA binaries"
+          exit 1
+        fi
+
+    - name: Create default user
+      run: |
+        cd ${{ env.WORKSPACE }}/Linux_for_Tegra
+
+        echo "Creating default user..."
+        sudo ./tools/l4t_create_default_user.sh \
+          -u jetson \
+          -p jetson \
+          -a \
+          -n jetson-orin-nano \
+          --accept-license
+
+    - name: Generate SD card image
+      run: |
+        cd ${{ env.WORKSPACE }}/Linux_for_Tegra
+
+        # Determine image name
+        IMAGE_NAME="${{ github.event.inputs.image_name || 'jetson-orin-nano-custom' }}"
+        TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+        FULL_IMAGE_NAME="${IMAGE_NAME}_${TIMESTAMP}.img"
+
+        echo "Creating SD card image: $FULL_IMAGE_NAME"
+
+        # Create the SD card image
+        cd tools
+        sudo ./jetson-disk-image-creator.sh \
+          -o "$FULL_IMAGE_NAME" \
+          -b jetson-orin-nano-devkit \
+          -d SD \
+          -r 300
+
+        # Move image to workspace root for artifact upload
+        sudo mv "$FULL_IMAGE_NAME" ${{ env.WORKSPACE }}/
+
+        # Create checksum
+        cd ${{ env.WORKSPACE }}
+        sha256sum "$FULL_IMAGE_NAME" > "$FULL_IMAGE_NAME.sha256"
+
+        # Create image info file
+        cat > "$FULL_IMAGE_NAME.info" << EOF
+        Jetson Orin Nano Custom SD Card Image
+        =====================================
+
+        Build Information:
+        - Build Date: $(date -u)
+        - L4T Version: ${{ env.L4T_VERSION }}
+        - GitHub SHA: ${{ github.sha }}
+        - GitHub Ref: ${{ github.ref }}
+        - Workflow: ${{ github.workflow }}
+        - Runner OS: ${{ runner.os }}
+
+        Image Details:
+        - Filename: $FULL_IMAGE_NAME
+        - Target Device: Jetson Orin Nano Developer Kit
+        - Root Filesystem: Ubuntu 22.04 LTS (ARM64)
+        - Default User: jetson / jetson
+
+        Custom Packages Included:
+        - Development tools (git, vim, htop, build-essential, cmake)
+        - Python 3 with common packages (numpy, opencv-python, flask)
+        - Node.js and npm
+        - Docker
+        - CAN utilities and I2C tools
+        - Network management tools
+
+        Usage Instructions:
+        1. Flash to SD card using balenaEtcher or dd command
+        2. Insert into Jetson Orin Nano Developer Kit
+        3. Power on and complete initial setup
+        4. Default login: jetson / jetson (change on first login)
+
+        For support and documentation:
+        https://github.com/${{ github.repository }}
+        EOF
+
+        echo "IMAGE_NAME=$FULL_IMAGE_NAME" >> $GITHUB_ENV
+
+    - name: Compress image for faster upload
+      run: |
+        cd ${{ env.WORKSPACE }}
+        echo "Compressing image for upload..."
+        xz -9 -T 0 "${{ env.IMAGE_NAME }}"
+        ls -lh "${{ env.IMAGE_NAME }}.xz"
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: jetson-orin-nano-image-${{ github.run_number }}
+        path: |
+          ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.xz
+          ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.sha256
+          ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.info
+        retention-days: 30
+
+    - name: Create release on tag
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.xz
+          ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.sha256
+          ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.info
+        body: |
+          ## Jetson Orin Nano Custom SD Card Image
+
+          This release contains a custom SD card image for the NVIDIA Jetson Orin Nano Developer Kit.
+
+          ### What's Included
+          - L4T Version: ${{ env.L4T_VERSION }}
+          - Ubuntu 22.04 LTS ARM64
+          - Custom development packages
+          - Docker pre-installed
+          - Default user: jetson/jetson
+
+          ### Installation
+          1. Download the `.img.xz` file
+          2. Extract using: `xz -d filename.img.xz`
+          3. Flash to SD card using balenaEtcher or dd
+          4. Boot your Jetson Orin Nano
+
+          ### Files
+          - `*.img.xz` - Compressed SD card image
+          - `*.sha256` - Checksum for verification
+          - `*.info` - Build and usage information
+
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Cleanup workspace
+      if: always()
+      run: |
+        cd /
+        sudo rm -rf ${{ env.WORKSPACE }} || true

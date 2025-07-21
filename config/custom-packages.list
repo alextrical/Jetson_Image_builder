@@ -1,0 +1,75 @@
+# Custom Packages Configuration
+# Add package names (one per line) to install in the root filesystem
+
+# Development Tools
+git
+# vim
+# htop
+# tree
+# curl
+# wget
+# unzip
+# zip
+
+# Build Tools
+# build-essential
+# cmake
+# make
+# gcc
+# g++
+# gdb
+# valgrind
+
+# Python Development
+# python3-dev
+# python3-pip
+# python3-setuptools
+# python3-wheel
+# python3-venv
+
+# System Administration
+# openssh-server
+# rsync
+# screen
+# tmux
+# systemd-timesyncd
+
+# Network Tools
+# net-tools
+# wireless-tools
+# network-manager
+# iw
+# wpasupplicant
+
+# Hardware Interface Tools
+# can-utils
+# i2c-tools
+# spi-tools
+# gpio-utils
+
+# Container Runtime
+# docker.io
+# docker-compose
+
+# Development Libraries
+# libopencv-dev
+# libssl-dev
+# libcurl4-openssl-dev
+# libeigen3-dev
+
+# Multimedia
+# gstreamer1.0-tools
+# gstreamer1.0-plugins-base
+# gstreamer1.0-plugins-good
+# gstreamer1.0-plugins-bad
+# v4l-utils
+
+# Additional Python packages (installed via pip3)
+# numpy
+# opencv-python
+# flask
+# requests
+# pyyaml
+# scipy
+# matplotlib
+# pillow
