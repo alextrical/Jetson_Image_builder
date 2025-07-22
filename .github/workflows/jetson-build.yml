@@ -296,7 +296,7 @@ jobs:
         cd tools
         sudo ./jetson-disk-image-creator.sh \
           -o "$FULL_IMAGE_NAME" \
-          -b jetson-orin-nano-devkit \
+          -b jetson-orin-nano-devkit-super \
           -d SD
 
         # Move image to workspace root for artifact upload

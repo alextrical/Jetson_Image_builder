@@ -1,0 +1,63 @@
+sudo apt-get update
+sudo apt-get install -y \
+    binfmt-support \
+    qemu-user-static \
+    pigz \
+    libxml2-utils \
+    xmlstarlet \
+    docker.io \
+    pv \
+    binutils \
+    gdisk
+
+sudo mkdir /workspace
+sudo chmod 777 /workspace
+sudo mount -t tmpfs -o size=50G myramdisk /workspace
+sudo dd if=/dev/zero of=/workspace/zero bs=16k count=100000
+sudo umount /workspace/
+
+sudo update-binfmts --enable qemu-aarch64
+sudo docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+sudo mkdir -p /downloads
+sudo chown $USER:$USER /downloads
+cd /downloads
+wget -q --show-progress -nc -O Jetson_Linux_r36.4.3_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r36_release_v4.3/release/Jetson_Linux_r36.4.3_aarch64.tbz2
+wget -q --show-progress -nc -O Tegra_Linux_Sample-Root-Filesystem_r36.4.3_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r36_release_v4.3/release/Tegra_Linux_Sample-Root-Filesystem_r36.4.3_aarch64.tbz2
+
+
+
+
+#Prep Workspace, this only needs to be run once per RamDrive setup
+cd /workspace
+pv /downloads/Jetson_Linux_r36.4.3_aarch64.tbz2 | tar -xjf -
+cp -a Linux_for_Tegra/rootfs/ Linux_for_Tegra/rootfs-sample/
+cd Linux_for_Tegra/rootfs-sample/
+pv /downloads/Tegra_Linux_Sample-Root-Filesystem_r36.4.3_aarch64.tbz2 | sudo tar -xpjf -
+
+
+#run this after any changes to clean build an image
+cd /workspace
+sudo cp -a Linux_for_Tegra/rootfs-sample/ Linux_for_Tegra/rootfs/
+
+cd /workspace/Linux_for_Tegra
+sudo ./apply_binaries.sh
+
+cd /workspace/Linux_for_Tegra
+sudo ./tools/l4t_create_default_user.sh \
+    -u jetson \
+    -p jetson \
+    -a \
+    -n jetson-orin-nano \
+    --accept-license
+
+FULL_IMAGE_NAME="jetson-orin-nano-custom_$(date +"%Y%m%d_%H%M%S").img"
+cd tools
+sudo ./jetson-disk-image-creator.sh \
+    -o "$FULL_IMAGE_NAME" \
+    -b jetson-orin-nano-devkit-super \
+    -d SD
+
+sudo mv "$FULL_IMAGE_NAME" /workspace/
+cd /workspace
+sudo rm -r Linux_for_Tegra/rootfs/
