@@ -37,6 +37,7 @@ jobs:
         sudo mkdir -p ${{ env.WORKSPACE }}
         sudo mkdir -p ${{ env.DOWNLOADS }}
         sudo chown $USER:$USER ${{ env.WORKSPACE }}
+        sudo chown $USER:$USER ${{ env.DOWNLOADS }}
         cd ${{ env.WORKSPACE }}
 
     - name: Install dependencies
