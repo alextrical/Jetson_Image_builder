@@ -122,11 +122,11 @@ jobs:
         cd ${{ env.WORKSPACE }}
 
         echo "Extracting L4T Driver Package..."
-        tar -xf Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2
+        tar -xf ${{ env.DOWNLOADS }}/Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2
 
         echo "Extracting Sample Root Filesystem..."
         cd Linux_for_Tegra/rootfs/
-        sudo tar -xpf ../../Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2
+        sudo tar -xpf ${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2
         cd ../..
 
     # # - name: Add custom packages to rootfs
