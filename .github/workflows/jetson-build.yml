@@ -86,14 +86,14 @@ jobs:
       id: cache-bsp
       uses: actions/cache@v4
       with:
-        path: ${{ env.WORKSPACE }}/Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2
+        path: /temp/Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2
         key: bsp-${{ env.L4T_VERSION }}
 
     # Download if BSP cache miss
     - name: Download L4T Driver Package (BSP)
       if: steps.cache-bsp.outputs.cache-hit != 'true'
       run: |
-        cd ${{ env.WORKSPACE }}
+        cd /temp
         echo "Downloading L4T Driver Package..."
         wget -q -O Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2 ${{ env.L4T_BSP_URL }}
 
@@ -102,14 +102,14 @@ jobs:
       id: cache-rootfs
       uses: actions/cache@v4
       with:
-        path: ${{ env.WORKSPACE }}/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2
+        path: /temp/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2
         key: rootfs-${{ env.L4T_VERSION }}
 
     # Download if RootFS cache miss
     - name: Download Sample Root Filesystem
       if: steps.cache-rootfs.outputs.cache-hit != 'true'
       run: |
-        cd ${{ env.WORKSPACE }}
+        cd /temp
         echo "Downloading Sample Root Filesystem..."
         wget -q -O Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2 ${{ env.L4T_ROOTFS_URL }}
 
@@ -346,8 +346,8 @@ jobs:
       run: |
         cd ${{ env.WORKSPACE }}
         echo "Compressing image for upload..."
-        pigz "${IMAGE_NAME}.img"
-        ls -lht "${IMAGE_NAME}.img.gz"
+        pigz "${IMAGE_NAME}"
+        ls -lht "${IMAGE_NAME}.gz"
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
