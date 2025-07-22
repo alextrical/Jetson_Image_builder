@@ -61,6 +61,7 @@ jobs:
           bc \
           build-essential \
           device-tree-compiler \
+          pigz \
           libxml2-utils \
           xmlstarlet
 
@@ -345,15 +346,15 @@ jobs:
       run: |
         cd ${{ env.WORKSPACE }}
         echo "Compressing image for upload..."
-        xz -9 -T 0 "${{ env.IMAGE_NAME }}"
-        ls -lh "${{ env.IMAGE_NAME }}.xz"
+        pigz "${IMAGE_NAME}.img"
+        ls -lht "${IMAGE_NAME}.img.gz"
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: jetson-orin-nano-image-${{ github.run_number }}
         path: |
-          ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.xz
+          ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.gz
           ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.sha256
           ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.info
         retention-days: 30
@@ -363,7 +364,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.xz
+          ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.gz
           ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.sha256
           ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.info
         body: |
@@ -379,13 +380,13 @@ jobs:
           - Default user: jetson/jetson
 
           ### Installation
-          1. Download the `.img.xz` file
-          2. Extract using: `xz -d filename.img.xz`
+          1. Download the `.img.gz` file
+          2. Extract using: `xz -d filename.img.gz`
           3. Flash to SD card using balenaEtcher or dd
           4. Boot your Jetson Orin Nano
 
           ### Files
-          - `*.img.xz` - Compressed SD card image
+          - `*.img.gz` - Compressed SD card image
           - `*.sha256` - Checksum for verification
           - `*.info` - Build and usage information
 
