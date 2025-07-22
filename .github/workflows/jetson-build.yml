@@ -22,6 +22,7 @@ env:
   L4T_BSP_URL: https://developer.nvidia.com/downloads/embedded/l4t/r36_release_v4.3/release/Jetson_Linux_r36.4.3_aarch64.tbz2
   L4T_ROOTFS_URL: https://developer.nvidia.com/downloads/embedded/l4t/r36_release_v4.3/release/Tegra_Linux_Sample-Root-Filesystem_r36.4.3_aarch64.tbz2
   WORKSPACE: /workspace
+  DOWNLOADS: /downloads
 
 jobs:
   build-jetson-image:
@@ -34,7 +35,7 @@ jobs:
     - name: Set up workspace
       run: |
         sudo mkdir -p ${{ env.WORKSPACE }}
-        sudo mkdir -p /downloads
+        sudo mkdir -p ${{ env.DOWNLOADS }}
         sudo chown $USER:$USER ${{ env.WORKSPACE }}
         cd ${{ env.WORKSPACE }}
 
@@ -42,6 +43,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y \
+          binfmt-support \
+          qemu-user-static \
           pigz \
           libxml2-utils \
           xmlstarlet
@@ -53,8 +56,6 @@ jobs:
       # lbzip2 \
       # python3 \
       # python3-pip \
-      # qemu-user-static \
-      # binfmt-support \
       # debootstrap \
       # parted \
       # kpartx \
@@ -67,16 +68,16 @@ jobs:
       # build-essential \
       # device-tree-compiler \
 
-    - name: Free Disk Space
-      uses: jlumbroso/free-disk-space@main
-      with:
-        tool-cache: true
-        android: true
-        dotnet: true
-        haskell: true
-        large-packages: true
-        docker-images: false
-        swap-storage: true
+    # - name: Free Disk Space
+    #   uses: jlumbroso/free-disk-space@main
+    #   with:
+    #     tool-cache: true
+    #     android: true
+    #     dotnet: true
+    #     haskell: true
+    #     large-packages: true
+    #     docker-images: false
+    #     swap-storage: true
 
     - name: Set up QEMU for ARM64 emulation
       run: |
@@ -88,14 +89,14 @@ jobs:
       id: cache-bsp
       uses: actions/cache@v4
       with:
-        path: /downloads/Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2
+        path: ${{ env.DOWNLOADS }}/Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2
         key: bsp-${{ env.L4T_VERSION }}
 
     # Download if BSP cache miss
     - name: Download L4T Driver Package (BSP)
       if: steps.cache-bsp.outputs.cache-hit != 'true'
       run: |
-        cd /downloads
+        cd ${{ env.DOWNLOADS }}
         echo "Downloading L4T Driver Package..."
         wget -q -O Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2 ${{ env.L4T_BSP_URL }}
 
@@ -104,14 +105,14 @@ jobs:
       id: cache-rootfs
       uses: actions/cache@v4
       with:
-        path: /downloads/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2
+        path: ${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2
         key: rootfs-${{ env.L4T_VERSION }}
 
     # Download if RootFS cache miss
     - name: Download Sample Root Filesystem
       if: steps.cache-rootfs.outputs.cache-hit != 'true'
       run: |
-        cd /downloads
+        cd ${{ env.DOWNLOADS }}
         echo "Downloading Sample Root Filesystem..."
         wget -q -O Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2 ${{ env.L4T_ROOTFS_URL }}
 
