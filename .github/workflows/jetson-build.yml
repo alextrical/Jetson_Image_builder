@@ -69,16 +69,16 @@ jobs:
       # build-essential \
       # device-tree-compiler \
 
-    # - name: Free Disk Space
-    #   uses: jlumbroso/free-disk-space@main
-    #   with:
-    #     tool-cache: true
-    #     android: true
-    #     dotnet: true
-    #     haskell: true
-    #     large-packages: true
-    #     docker-images: false
-    #     swap-storage: true
+    - name: Free Disk Space
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: true
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: false
+        swap-storage: true
 
     - name: Set up QEMU for ARM64 emulation
       run: |
@@ -259,7 +259,7 @@ jobs:
         cd ${{ env.WORKSPACE }}/Linux_for_Tegra
 
         echo "Applying NVIDIA L4T binaries..."
-        sudo ./apply_binaries.sh
+        sudo ./apply_binaries.sh --factory
 
         # Verify the script completed successfully
         if [ $? -eq 0 ]; then
