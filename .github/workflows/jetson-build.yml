@@ -34,6 +34,7 @@ jobs:
     - name: Set up workspace
       run: |
         sudo mkdir -p ${{ env.WORKSPACE }}
+        sudo mkdir -p /downloads
         sudo chown $USER:$USER ${{ env.WORKSPACE }}
         cd ${{ env.WORKSPACE }}
 
@@ -41,29 +42,30 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y \
-          wget \
-          curl \
-          tar \
-          bzip2 \
-          lbzip2 \
-          python3 \
-          python3-pip \
-          qemu-user-static \
-          binfmt-support \
-          debootstrap \
-          parted \
-          kpartx \
-          gdisk \
-          dosfstools \
-          e2fsprogs \
-          sudo \
-          rsync \
-          bc \
-          build-essential \
-          device-tree-compiler \
           pigz \
           libxml2-utils \
           xmlstarlet
+
+      # wget \
+      # curl \
+      # tar \
+      # bzip2 \
+      # lbzip2 \
+      # python3 \
+      # python3-pip \
+      # qemu-user-static \
+      # binfmt-support \
+      # debootstrap \
+      # parted \
+      # kpartx \
+      # gdisk \
+      # dosfstools \
+      # e2fsprogs \
+      # sudo \
+      # rsync \
+      # bc \
+      # build-essential \
+      # device-tree-compiler \
 
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@main
@@ -86,14 +88,14 @@ jobs:
       id: cache-bsp
       uses: actions/cache@v4
       with:
-        path: /temp/Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2
+        path: /downloads/Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2
         key: bsp-${{ env.L4T_VERSION }}
 
     # Download if BSP cache miss
     - name: Download L4T Driver Package (BSP)
       if: steps.cache-bsp.outputs.cache-hit != 'true'
       run: |
-        cd /temp
+        cd /downloads
         echo "Downloading L4T Driver Package..."
         wget -q -O Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2 ${{ env.L4T_BSP_URL }}
 
@@ -102,14 +104,14 @@ jobs:
       id: cache-rootfs
       uses: actions/cache@v4
       with:
-        path: /temp/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2
+        path: /downloads/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2
         key: rootfs-${{ env.L4T_VERSION }}
 
     # Download if RootFS cache miss
     - name: Download Sample Root Filesystem
       if: steps.cache-rootfs.outputs.cache-hit != 'true'
       run: |
-        cd /temp
+        cd /downloads
         echo "Downloading Sample Root Filesystem..."
         wget -q -O Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2 ${{ env.L4T_ROOTFS_URL }}
 
@@ -125,79 +127,79 @@ jobs:
         sudo tar -xpf ../../Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2
         cd ../..
 
-    - name: Add custom packages to rootfs
-      run: |
-        cd ${{ env.WORKSPACE }}/Linux_for_Tegra
+    # - name: Add custom packages to rootfs
+    #   run: |
+    #     cd ${{ env.WORKSPACE }}/Linux_for_Tegra
 
-        # Install additional packages in rootfs using chroot
-        echo "Setting up chroot environment..."
-        sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
+    #     # Install additional packages in rootfs using chroot
+    #     echo "Setting up chroot environment..."
+    #     sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
 
-        # Mount necessary filesystems for chroot
-        sudo mount --bind /dev rootfs/dev/
-        sudo mount --bind /sys rootfs/sys/
-        sudo mount --bind /proc rootfs/proc/
-        sudo mount --bind /dev/pts rootfs/dev/pts/
+    #     # Mount necessary filesystems for chroot
+    #     sudo mount --bind /dev rootfs/dev/
+    #     sudo mount --bind /sys rootfs/sys/
+    #     sudo mount --bind /proc rootfs/proc/
+    #     sudo mount --bind /dev/pts rootfs/dev/pts/
 
-        # Copy resolv.conf for network access in chroot
-        sudo cp /etc/resolv.conf rootfs/etc/resolv.conf.bak
-        sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
+    #     # Copy resolv.conf for network access in chroot
+    #     sudo cp /etc/resolv.conf rootfs/etc/resolv.conf.bak
+    #     sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
 
-        # Create script to install packages in chroot
-        cat > install_packages.sh << 'EOF'
-        #!/bin/bash
-        export DEBIAN_FRONTEND=noninteractive
-        apt-get update
-        apt-get upgrade -y
-        apt-get install -y \
-          curl \
-          wget \
-          git \
-          vim \
-          htop \
-          build-essential \
-          cmake \
-          python3-dev \
-          python3-pip \
-          python3-setuptools \
-          nodejs \
-          npm \
-          docker.io \
-          openssh-server \
-          can-utils \
-          i2c-tools \
-          net-tools \
-          wireless-tools \
-          network-manager
+    #     # Create script to install packages in chroot
+    #     cat > install_packages.sh << 'EOF'
+    #     #!/bin/bash
+    #     export DEBIAN_FRONTEND=noninteractive
+    #     apt-get update
+    #     apt-get upgrade -y
+    #     apt-get install -y \
+    #       curl \
+    #       wget \
+    #       git \
+    #       vim \
+    #       htop \
+    #       build-essential \
+    #       cmake \
+    #       python3-dev \
+    #       python3-pip \
+    #       python3-setuptools \
+    #       nodejs \
+    #       npm \
+    #       docker.io \
+    #       openssh-server \
+    #       can-utils \
+    #       i2c-tools \
+    #       net-tools \
+    #       wireless-tools \
+    #       network-manager
 
-        # Install Python packages
-        pip3 install \
-          numpy \
-          opencv-python \
-          flask \
-          requests \
-          pyyaml
+    #     # Install Python packages
+    #     pip3 install \
+    #       numpy \
+    #       opencv-python \
+    #       flask \
+    #       requests \
+    #       pyyaml
 
-        # Clean up
-        apt-get clean
-        rm -rf /var/lib/apt/lists/*
-        EOF
+    #     # Clean up
+    #     apt-get clean
+    #     rm -rf /var/lib/apt/lists/*
+    #     EOF
 
-        # Make script executable and run it in chroot
-        chmod +x install_packages.sh
-        sudo cp install_packages.sh rootfs/tmp/
-        sudo chroot rootfs /tmp/install_packages.sh
+    #     # Make script executable and run it in chroot
+    #     chmod +x install_packages.sh
+    #     sudo cp install_packages.sh rootfs/tmp/
+    #     sudo chroot rootfs /tmp/install_packages.sh
 
-        # Clean up chroot
-        sudo rm rootfs/tmp/install_packages.sh
-        sudo rm rootfs/etc/resolv.conf
-        sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
+    #     # Clean up chroot
+    #     sudo rm rootfs/tmp/install_packages.sh
+    #     sudo rm rootfs/etc/resolv.conf
+    #     sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
 
-        # Unmount filesystems
-        sudo umount rootfs/dev/pts/ || true
-        sudo umount rootfs/dev/ || true
-        sudo umount rootfs/sys/ || true
-        sudo umount rootfs/proc/ || true
+    #     # Unmount filesystems
+    #     sudo umount rootfs/dev/pts/ || true
+    #     sudo umount rootfs/dev/ || true
+    #     sudo umount rootfs/sys/ || true
+    #     sudo umount rootfs/proc/ || true
 
     - name: Copy custom files to rootfs
       run: |
@@ -293,8 +295,7 @@ jobs:
         sudo ./jetson-disk-image-creator.sh \
           -o "$FULL_IMAGE_NAME" \
           -b jetson-orin-nano-devkit \
-          -d SD \
-          -r 300
+          -d SD
 
         # Move image to workspace root for artifact upload
         sudo mv "$FULL_IMAGE_NAME" ${{ env.WORKSPACE }}/
