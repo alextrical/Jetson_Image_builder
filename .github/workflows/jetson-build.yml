@@ -85,33 +85,33 @@ jobs:
         sudo update-binfmts --enable qemu-aarch64
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
-    # Cache L4T Driver Package (BSP)
-    - name: Cache L4T BSP
-      id: cache-bsp
-      uses: actions/cache@v4
-      with:
-        path: ${{ env.DOWNLOADS }}/Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2
-        key: bsp-${{ env.L4T_VERSION }}
+    # # Cache L4T Driver Package (BSP)
+    # - name: Cache L4T BSP
+    #   id: cache-bsp
+    #   uses: actions/cache@v4
+    #   with:
+    #     path: ${{ env.DOWNLOADS }}/Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2
+    #     key: bsp-${{ env.L4T_VERSION }}
 
     # Download if BSP cache miss
     - name: Download L4T Driver Package (BSP)
-      if: steps.cache-bsp.outputs.cache-hit != 'true'
+      # if: steps.cache-bsp.outputs.cache-hit != 'true'
       run: |
         cd ${{ env.DOWNLOADS }}
         echo "Downloading L4T Driver Package..."
         wget -q -O Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2 ${{ env.L4T_BSP_URL }}
 
-    # Cache Sample Root Filesystem
-    - name: Cache Sample RootFS
-      id: cache-rootfs
-      uses: actions/cache@v4
-      with:
-        path: ${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2
-        key: rootfs-${{ env.L4T_VERSION }}
+    # # Cache Sample Root Filesystem
+    # - name: Cache Sample RootFS
+    #   id: cache-rootfs
+    #   uses: actions/cache@v4
+    #   with:
+    #     path: ${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2
+    #     key: rootfs-${{ env.L4T_VERSION }}
 
     # Download if RootFS cache miss
     - name: Download Sample Root Filesystem
-      if: steps.cache-rootfs.outputs.cache-hit != 'true'
+      # if: steps.cache-rootfs.outputs.cache-hit != 'true'
       run: |
         cd ${{ env.DOWNLOADS }}
         echo "Downloading Sample Root Filesystem..."
@@ -259,7 +259,7 @@ jobs:
         cd ${{ env.WORKSPACE }}/Linux_for_Tegra
 
         echo "Applying NVIDIA L4T binaries..."
-        sudo ./apply_binaries.sh --factory
+        sudo ./apply_binaries.sh
 
         # Verify the script completed successfully
         if [ $? -eq 0 ]; then
