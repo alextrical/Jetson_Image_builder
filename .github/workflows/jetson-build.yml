@@ -62,25 +62,6 @@ jobs:
           libxml2-utils \
           xmlstarlet
 
-      # wget \
-      # curl \
-      # tar \
-      # bzip2 \
-      # lbzip2 \
-      # python3 \
-      # python3-pip \
-      # debootstrap \
-      # parted \
-      # kpartx \
-      # gdisk \
-      # dosfstools \
-      # e2fsprogs \
-      # sudo \
-      # rsync \
-      # bc \
-      # build-essential \
-      # device-tree-compiler \
-
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@main
       with:
@@ -157,10 +138,10 @@ jobs:
 
           # Copy script to install packages in chroot
           echo "Copying install_packages.sh file from scripts..."
-          sudo cp ${{ github.workspace }}/scripts/install_packages.sh install_packages.sh
+          cp ${{ github.workspace }}/scripts/install_packages.sh install_packages.sh
 
           # Make script executable and run it in chroot
-          sudo chmod +x install_packages.sh
+          chmod +x install_packages.sh
           sudo cp install_packages.sh rootfs/tmp/
           sudo chroot rootfs /tmp/install_packages.sh
 
@@ -229,10 +210,8 @@ jobs:
 
     - name: Apply NVIDIA proprietary binaries
       run: |
-        cd ${{ env.WORKSPACE }}/Linux_for_Tegra
-
         echo "Applying NVIDIA L4T binaries..."
-        sudo ./apply_binaries.sh
+        sudo ${{ env.WORKSPACE }}/Linux_for_Tegra/apply_binaries.sh
 
         # Verify the script completed successfully
         if [ $? -eq 0 ]; then
@@ -244,10 +223,8 @@ jobs:
 
     - name: Create default user
       run: |
-        cd ${{ env.WORKSPACE }}/Linux_for_Tegra
-
         echo "Creating default user..."
-        sudo ./tools/l4t_create_default_user.sh \
+        sudo ${{ env.WORKSPACE }}/Linux_for_Tegra/tools/l4t_create_default_user.sh \
           -u jetson \
           -p jetson \
           -a \
@@ -263,10 +240,10 @@ jobs:
             "NVME" | "nvme")\
               rootfs_dev="nvme0n1p1"\
               ;;\
-            *)' jetson-disk-image-creator.sh
+            *)' ${{ env.WORKSPACE }}/Linux_for_Tegra/tools/jetson-disk-image-creator.sh
 
         sed -i 's/Incorrect root filesystem device - Supported devices - SD, USB/\
-            Incorrect root filesystem device - Supported devices - SD, USB, NVME/g' jetson-disk-image-creator.sh
+            Incorrect root filesystem device - Supported devices - SD, USB, NVME/g' ${{ env.WORKSPACE }}/Linux_for_Tegra/tools/jetson-disk-image-creator.sh
 
     - name: Generate disk image
       run: |
