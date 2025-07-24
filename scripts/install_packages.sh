@@ -3,7 +3,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update
 
 sudo apt purge -y \
-  libreoffice* printer* ubiquity* mono* python2* \
+  libreoffice* printer* ubiquity* mono* \
   --auto-remove
 
 sudo apt autoremove -y
