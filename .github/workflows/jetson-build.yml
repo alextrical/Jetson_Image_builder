@@ -136,48 +136,45 @@ jobs:
         cd Linux_for_Tegra/rootfs/
         sudo tar -xpf ${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2
 
-    # - name: Add custom packages to rootfs
-    #   run: |
-    #     cd ${{ env.WORKSPACE }}/Linux_for_Tegra
+    - name: Add custom packages to rootfs
+      run: |
+        cd ${{ env.WORKSPACE }}/Linux_for_Tegra
 
-    #     ls ${{ github.workspace }}
-    #     ls ${{ github.workspace }}/scripts
+        if [ -f "${{ github.workspace }}/scripts/install_packages.sh" ]; then
+          # Install additional packages in rootfs using chroot
+          echo "Setting up chroot environment..."
+          sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
 
-    #     if [ -d "${{ github.workspace }}/scripts/install_packages.sh" ]; then
-    #       # Install additional packages in rootfs using chroot
-    #       echo "Setting up chroot environment..."
-    #       sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
+          # Mount necessary filesystems for chroot
+          sudo mount --bind /dev rootfs/dev/
+          sudo mount --bind /sys rootfs/sys/
+          sudo mount --bind /proc rootfs/proc/
+          sudo mount --bind /dev/pts rootfs/dev/pts/
 
-    #       # Mount necessary filesystems for chroot
-    #       sudo mount --bind /dev rootfs/dev/
-    #       sudo mount --bind /sys rootfs/sys/
-    #       sudo mount --bind /proc rootfs/proc/
-    #       sudo mount --bind /dev/pts rootfs/dev/pts/
+          # Copy resolv.conf for network access in chroot
+          sudo cp /etc/resolv.conf rootfs/etc/resolv.conf.bak
+          sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
 
-    #       # Copy resolv.conf for network access in chroot
-    #       sudo cp /etc/resolv.conf rootfs/etc/resolv.conf.bak
-    #       sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
+          # Copy script to install packages in chroot
+          echo "Copying install_packages.sh file from scripts..."
+          sudo cp ${{ github.workspace }}/scripts/install_packages.sh install_packages.sh
 
-    #       # Copy script to install packages in chroot
-    #       echo "Copying install_packages.sh file from scripts..."
-    #       sudo cp ${{ github.workspace }}/scripts/install_packages.sh install_packages.sh
+          # Make script executable and run it in chroot
+          chmod +x install_packages.sh
+          sudo cp install_packages.sh rootfs/tmp/
+          sudo chroot rootfs /tmp/install_packages.sh
 
-    #       # Make script executable and run it in chroot
-    #       chmod +x install_packages.sh
-    #       sudo cp install_packages.sh rootfs/tmp/
-    #       sudo chroot rootfs /tmp/install_packages.sh
+          # Clean up chroot
+          sudo rm rootfs/tmp/install_packages.sh
+          sudo rm rootfs/etc/resolv.conf
+          sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
 
-    #       # Clean up chroot
-    #       sudo rm rootfs/tmp/install_packages.sh
-    #       sudo rm rootfs/etc/resolv.conf
-    #       sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
-
-    #       # Unmount filesystems
-    #       sudo umount rootfs/dev/pts/ || true
-    #       sudo umount rootfs/dev/ || true
-    #       sudo umount rootfs/sys/ || true
-    #       sudo umount rootfs/proc/ || true
-    #     fi
+          # Unmount filesystems
+          sudo umount rootfs/dev/pts/ || true
+          sudo umount rootfs/dev/ || true
+          sudo umount rootfs/sys/ || true
+          sudo umount rootfs/proc/ || true
+        fi
 
     # - name: Copy custom files to rootfs
     #   run: |
@@ -230,20 +227,20 @@ jobs:
     #     sudo cp jetson-custom-init.service rootfs/etc/systemd/system/
     #     sudo chroot rootfs systemctl enable jetson-custom-init.service
 
-    # - name: Apply NVIDIA proprietary binaries
-    #   run: |
-    #     cd ${{ env.WORKSPACE }}/Linux_for_Tegra
+    - name: Apply NVIDIA proprietary binaries
+      run: |
+        cd ${{ env.WORKSPACE }}/Linux_for_Tegra
 
-    #     echo "Applying NVIDIA L4T binaries..."
-    #     sudo ./apply_binaries.sh
+        echo "Applying NVIDIA L4T binaries..."
+        sudo ./apply_binaries.sh
 
-    #     # Verify the script completed successfully
-    #     if [ $? -eq 0 ]; then
-    #       echo "✅ NVIDIA binaries applied successfully"
-    #     else
-    #       echo "❌ Failed to apply NVIDIA binaries"
-    #       exit 1
-    #     fi
+        # Verify the script completed successfully
+        if [ $? -eq 0 ]; then
+          echo "✅ NVIDIA binaries applied successfully"
+        else
+          echo "❌ Failed to apply NVIDIA binaries"
+          exit 1
+        fi
 
     - name: Create default user
       run: |
