@@ -16,15 +16,11 @@ on:
         description: 'L4T Version (default: 4.4)'
         required: false
         default: '4.4'
-      image_name:
-        description: 'Output image name'
-        required: false
-        default: 'jetson-orin-nano-custom'
       image_type:
         description: 'Output image drive type (SD/USB/NVME)'
         required: false
         default: 'NVME'
-      jetson_board:
+      jetson_type:
         description: 'Jetson board type'
         required: false
         default: 'jetson-orin-nano-devkit-super'
@@ -33,6 +29,7 @@ env:
   L4T_MAJOR_VERSION: "${{ github.event.env.L4T_MAJOR_VERSION || '36' }}"
   L4T_MINOR_VERSION: "${{ github.event.env.L4T_MINOR_VERSION || '4.4' }}"
   IMAGE_TYPE: "${{ github.event.inputs.image_type || 'NVME' }}"
+  JETSON_TYPE: "${{ github.event.inputs.jetson_type || 'jetson-orin-nano-devkit-super' }}"
   WORKSPACE: /workspace
   DOWNLOADS: /downloads
 
@@ -228,7 +225,7 @@ jobs:
           -u jetson \
           -p jetson \
           -a \
-          -n jetson-orin-nano \
+          -n ${{ env.JETSON_TYPE }} \
           --accept-license
 
     - name: Patch jetson-disk-image-creator.sh for NVME support
@@ -245,22 +242,22 @@ jobs:
         sed -i 's/Incorrect root filesystem device - Supported devices - SD, USB/\
             Incorrect root filesystem device - Supported devices - SD, USB, NVME/g' ${{ env.WORKSPACE }}/Linux_for_Tegra/tools/jetson-disk-image-creator.sh
 
-    - name: Generate disk image
+    - name: Generate ${{ env.IMAGE_TYPE }} image
       run: |
         cd ${{ env.WORKSPACE }}/Linux_for_Tegra
 
         # Determine image name
-        IMAGE_NAME="${{ github.event.inputs.image_name || 'jetson-orin-nano-custom' }}"
+        IMAGE_NAME="${{ env.JETSON_TYPE }}"
         TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
         FULL_IMAGE_NAME="${IMAGE_NAME}_${TIMESTAMP}_${{ env.IMAGE_TYPE }}.img"
 
-        echo "Creating SD card image: $FULL_IMAGE_NAME"
+        echo "Creating ${{ env.IMAGE_TYPE }} image: $FULL_IMAGE_NAME"
 
-        # Create the SD card image
+        # Create the ${{ env.IMAGE_TYPE }} image
         cd tools
         sudo ./jetson-disk-image-creator.sh \
           -o "$FULL_IMAGE_NAME" \
-          -b jetson-orin-nano-devkit-super \
+          -b ${{ env.JETSON_TYPE }} \
           -d ${{ env.IMAGE_TYPE }}
 
         # Move image to workspace root for artifact upload
@@ -272,12 +269,12 @@ jobs:
 
         # Create image info file
         cat > "$FULL_IMAGE_NAME.info" << EOF
-        Jetson Orin Nano Custom SD Card Image
+        Jetson Custom ${{ env.IMAGE_TYPE }} Image
         =====================================
 
         Build Information:
         - Build Date: $(date -u)
-        - L4T Version: ${{ env.L4T_VERSION }}
+        - L4T Version: ${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
         - GitHub SHA: ${{ github.sha }}
         - GitHub Ref: ${{ github.ref }}
         - Workflow: ${{ github.workflow }}
@@ -285,7 +282,7 @@ jobs:
 
         Image Details:
         - Filename: $FULL_IMAGE_NAME
-        - Target Device: Jetson Orin Nano Developer Kit
+        - Target Device: ${{ env.JETSON_TYPE }}
         - Root Filesystem: Ubuntu 22.04 LTS (ARM64)
         - Default User: jetson / jetson
 
@@ -298,8 +295,8 @@ jobs:
         # - Network management tools
 
         Usage Instructions:
-        1. Flash to Disk using balenaEtcher or dd command
-        2. Insert into Jetson Orin Nano Developer Kit
+        1. Flash to ${{ env.IMAGE_TYPE }} using balenaEtcher or dd command
+        2. Insert into ${{ env.JETSON_TYPE }}
         3. Power on and complete initial setup
         4. Default login: jetson / jetson (change on first login)
 
@@ -335,12 +332,12 @@ jobs:
           ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.sha256
           ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.info
         body: |
-          ## Jetson Disk Image
+          ## Jetson ${{ env.IMAGE_TYPE }} Image
 
-          This release contains a custom Disk image for the NVIDIA Jetson Developer Kit.
+          This release contains a custom ${{ env.IMAGE_TYPE }} image for the NVIDIA ${{ env.JETSON_TYPE }}.
 
           ### What's Included
-          - L4T Version: ${{ env.L4T_VERSION }}
+          - L4T Version: ${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
           - Ubuntu 22.04 LTS ARM64
           - Custom development packages
           - Docker pre-installed
@@ -349,11 +346,12 @@ jobs:
           ### Installation
           1. Download the `.img.gz` file
           2. Extract using: `xz -d filename.img.gz`
-          3. Flash to Disk using balenaEtcher or dd
-          4. Boot your Jetson
+          3. Flash to ${{ env.IMAGE_TYPE }} using balenaEtcher or dd
+          4. insert memory into your Jetson
+          5. Boot your ${{ env.JETSON_TYPE }}
 
           ### Files
-          - `*.img.gz` - Compressed Disk image
+          - `*.img.gz` - Compressed ${{ env.IMAGE_TYPE }} image
           - `*.sha256` - Checksum for verification
           - `*.info` - Build and usage information
 
