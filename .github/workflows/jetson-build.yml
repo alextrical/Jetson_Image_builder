@@ -137,10 +137,15 @@ jobs:
           echo "Copying install_packages.sh file from scripts..."
           cp ${{ github.workspace }}/scripts/install_packages.sh install_packages.sh
 
+          # Copy script to resize the rootfs
+          sudo cp ${{ github.workspace }}/scripts/resizerootfs.sh rootfs/usr/local/bin
+          sudo cp ${{ github.workspace }}/scripts/resizerootfs.service rootfs/etc/systemd/system
+
           # Make script executable and run it in chroot
           chmod +x install_packages.sh
           sudo cp install_packages.sh rootfs/tmp/
           sudo chroot rootfs /tmp/install_packages.sh
+          sudo chroot rootfs systemctl enable resizerootfs.service
 
           # Clean up chroot
           sudo rm rootfs/tmp/install_packages.sh
