@@ -8,19 +8,28 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
     inputs:
-      l4t_version:
-        description: 'L4T Version (default: 36.4.3)'
+      l4t_major_version:
+        description: 'L4T Version (default: 36)'
         required: false
-        default: '36.4.3'
+        default: '36'
+      l4t_minor_version:
+        description: 'L4T Version (default: 4.4)'
+        required: false
+        default: '4.4'
       image_name:
         description: 'Output image name'
         required: false
         default: 'jetson-orin-nano-custom'
+      image_type:
+        description: 'Output image drive type (SD/USB/NVME)'
+        required: false
+        default: 'NVME'
+      jetson_board:
+        description: 'Jetson board type'
+        required: false
+        default: 'jetson-orin-nano-devkit-super'
 
 env:
-  L4T_VERSION: 36.4.3
-  L4T_BSP_URL: https://developer.nvidia.com/downloads/embedded/l4t/r36_release_v4.3/release/Jetson_Linux_r36.4.3_aarch64.tbz2
-  L4T_ROOTFS_URL: https://developer.nvidia.com/downloads/embedded/l4t/r36_release_v4.3/release/Tegra_Linux_Sample-Root-Filesystem_r36.4.3_aarch64.tbz2
   WORKSPACE: /workspace
   DOWNLOADS: /downloads
 
@@ -35,8 +44,8 @@ jobs:
     - name: Set up workspace
       run: |
         sudo mkdir -p ${{ env.WORKSPACE }}
-        sudo mkdir -p ${{ env.DOWNLOADS }}
         sudo chown $USER:$USER ${{ env.WORKSPACE }}
+        sudo mkdir -p ${{ env.DOWNLOADS }}
         sudo chown $USER:$USER ${{ env.DOWNLOADS }}
         cd ${{ env.WORKSPACE }}
 
@@ -85,123 +94,87 @@ jobs:
         sudo update-binfmts --enable qemu-aarch64
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
-    # # Cache L4T Driver Package (BSP)
-    # - name: Cache L4T BSP
-    #   id: cache-bsp
-    #   uses: actions/cache@v4
-    #   with:
-    #     path: ${{ env.DOWNLOADS }}/Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2
-    #     key: bsp-${{ env.L4T_VERSION }}
+    - name: Cache L4T BSP
+      id: cache-bsp
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.DOWNLOADS }}/Jetson_Linux_r${{ inputs.l4t_major_version }}.${{ inputs.l4t_minor_version }}_aarch64.tbz2
+        key: bsp-${{ inputs.l4t_major_version }}.${{ inputs.l4t_minor_version }}
 
-    # Download if BSP cache miss
     - name: Download L4T Driver Package (BSP)
-      # if: steps.cache-bsp.outputs.cache-hit != 'true'
+      if: steps.cache-bsp.outputs.cache-hit != 'true'
       run: |
         cd ${{ env.DOWNLOADS }}
         echo "Downloading L4T Driver Package..."
-        wget -q -O Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2 ${{ env.L4T_BSP_URL }}
+        wget -q -O Jetson_Linux_r${{ inputs.l4t_major_version }}.${{ inputs.l4t_minor_version }}_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ inputs.l4t_major_version }}_release_v${{ inputs.l4t_minor_version }}/release/Jetson_Linux_r${{ inputs.l4t_major_version }}.${{ inputs.l4t_minor_version }}_aarch64.tbz2
 
-    # # Cache Sample Root Filesystem
-    # - name: Cache Sample RootFS
-    #   id: cache-rootfs
-    #   uses: actions/cache@v4
-    #   with:
-    #     path: ${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2
-    #     key: rootfs-${{ env.L4T_VERSION }}
+    - name: Cache Sample RootFS
+      id: cache-rootfs
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_r${{ inputs.l4t_major_version }}.${{ inputs.l4t_minor_version }}_aarch64.tbz2
+        key: rootfs-${{ inputs.l4t_major_version }}.${{ inputs.l4t_minor_version }}
 
-    # Download if RootFS cache miss
     - name: Download Sample Root Filesystem
-      # if: steps.cache-rootfs.outputs.cache-hit != 'true'
+      if: steps.cache-rootfs.outputs.cache-hit != 'true'
       run: |
         cd ${{ env.DOWNLOADS }}
         echo "Downloading Sample Root Filesystem..."
-        wget -q -O Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2 ${{ env.L4T_ROOTFS_URL }}
+        wget -q -O Tegra_Linux_Sample-Root-Filesystem_r${{ inputs.l4t_major_version }}.${{ inputs.l4t_minor_version }}_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ inputs.l4t_major_version }}_release_v${{ inputs.l4t_minor_version }}/release/Tegra_Linux_Sample-Root-Filesystem_r${{ inputs.l4t_major_version }}.${{ inputs.l4t_minor_version }}_aarch64.tbz2
 
     - name: Extract L4T packages
       run: |
         cd ${{ env.WORKSPACE }}
 
         echo "Extracting L4T Driver Package..."
-        tar -xf ${{ env.DOWNLOADS }}/Jetson_Linux_r${{ env.L4T_VERSION }}_aarch64.tbz2
+        tar -xf ${{ env.DOWNLOADS }}/Jetson_Linux_r${{ inputs.l4t_major_version }}.${{ inputs.l4t_minor_version }}_aarch64.tbz2
 
         echo "Extracting Sample Root Filesystem..."
         cd Linux_for_Tegra/rootfs/
-        sudo tar -xpf ${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_VERSION }}_aarch64.tbz2
-        cd ../..
+        sudo tar -xpf ${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_r${{ inputs.l4t_major_version }}.${{ inputs.l4t_minor_version }}_aarch64.tbz2
 
-    # # - name: Add custom packages to rootfs
-    # #   run: |
-    # #     cd ${{ env.WORKSPACE }}/Linux_for_Tegra
+    - name: Add custom packages to rootfs
+      run: |
+        cd ${{ env.WORKSPACE }}/Linux_for_Tegra
 
-    # #     # Install additional packages in rootfs using chroot
-    # #     echo "Setting up chroot environment..."
-    # #     sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
+        ls ${{ github.workspace }}
+        ls ${{ github.workspace }}/scripts
 
-    # #     # Mount necessary filesystems for chroot
-    # #     sudo mount --bind /dev rootfs/dev/
-    # #     sudo mount --bind /sys rootfs/sys/
-    # #     sudo mount --bind /proc rootfs/proc/
-    # #     sudo mount --bind /dev/pts rootfs/dev/pts/
+        if [ -d "${{ github.workspace }}/scripts/install_packages.sh" ]; then
+          # Install additional packages in rootfs using chroot
+          echo "Setting up chroot environment..."
+          sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
 
-    # #     # Copy resolv.conf for network access in chroot
-    # #     sudo cp /etc/resolv.conf rootfs/etc/resolv.conf.bak
-    # #     sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
+          # Mount necessary filesystems for chroot
+          sudo mount --bind /dev rootfs/dev/
+          sudo mount --bind /sys rootfs/sys/
+          sudo mount --bind /proc rootfs/proc/
+          sudo mount --bind /dev/pts rootfs/dev/pts/
 
-    # #     # Create script to install packages in chroot
-    # #     cat > install_packages.sh << 'EOF'
-    # #     #!/bin/bash
-    # #     export DEBIAN_FRONTEND=noninteractive
-    # #     apt-get update
-    # #     apt-get upgrade -y
-    # #     apt-get install -y \
-    # #       curl \
-    # #       wget \
-    # #       git \
-    # #       vim \
-    # #       htop \
-    # #       build-essential \
-    # #       cmake \
-    # #       python3-dev \
-    # #       python3-pip \
-    # #       python3-setuptools \
-    # #       nodejs \
-    # #       npm \
-    # #       docker.io \
-    # #       openssh-server \
-    # #       can-utils \
-    # #       i2c-tools \
-    # #       net-tools \
-    # #       wireless-tools \
-    # #       network-manager
+          # Copy resolv.conf for network access in chroot
+          sudo cp /etc/resolv.conf rootfs/etc/resolv.conf.bak
+          sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
 
-    # #     # Install Python packages
-    # #     pip3 install \
-    # #       numpy \
-    # #       opencv-python \
-    # #       flask \
-    # #       requests \
-    # #       pyyaml
+          # Copy script to install packages in chroot
+          echo "Copying install_packages.sh file from scripts..."
+          sudo cp ${{ github.workspace }}/scripts/install_packages.sh install_packages.sh
 
-    # #     # Clean up
-    # #     apt-get clean
-    # #     rm -rf /var/lib/apt/lists/*
-    # #     EOF
+          # Make script executable and run it in chroot
+          chmod +x install_packages.sh
+          sudo cp install_packages.sh rootfs/tmp/
+          sudo chroot rootfs /tmp/install_packages.sh
 
-    # #     # Make script executable and run it in chroot
-    # #     chmod +x install_packages.sh
-    # #     sudo cp install_packages.sh rootfs/tmp/
-    # #     sudo chroot rootfs /tmp/install_packages.sh
+          # Clean up chroot
+          sudo rm rootfs/tmp/install_packages.sh
+          sudo rm rootfs/etc/resolv.conf
+          sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
 
-    # #     # Clean up chroot
-    # #     sudo rm rootfs/tmp/install_packages.sh
-    # #     sudo rm rootfs/etc/resolv.conf
-    # #     sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
-
-    # #     # Unmount filesystems
-    # #     sudo umount rootfs/dev/pts/ || true
-    # #     sudo umount rootfs/dev/ || true
-    # #     sudo umount rootfs/sys/ || true
-    # #     sudo umount rootfs/proc/ || true
+          # Unmount filesystems
+          sudo umount rootfs/dev/pts/ || true
+          sudo umount rootfs/dev/ || true
+          sudo umount rootfs/sys/ || true
+          sudo umount rootfs/proc/ || true
+        fi
 
     # - name: Copy custom files to rootfs
     #   run: |
@@ -254,20 +227,20 @@ jobs:
     #     sudo cp jetson-custom-init.service rootfs/etc/systemd/system/
     #     sudo chroot rootfs systemctl enable jetson-custom-init.service
 
-    - name: Apply NVIDIA proprietary binaries
-      run: |
-        cd ${{ env.WORKSPACE }}/Linux_for_Tegra
+    # - name: Apply NVIDIA proprietary binaries
+    #   run: |
+    #     cd ${{ env.WORKSPACE }}/Linux_for_Tegra
 
-        echo "Applying NVIDIA L4T binaries..."
-        sudo ./apply_binaries.sh
+    #     echo "Applying NVIDIA L4T binaries..."
+    #     sudo ./apply_binaries.sh
 
-        # Verify the script completed successfully
-        if [ $? -eq 0 ]; then
-          echo "✅ NVIDIA binaries applied successfully"
-        else
-          echo "❌ Failed to apply NVIDIA binaries"
-          exit 1
-        fi
+    #     # Verify the script completed successfully
+    #     if [ $? -eq 0 ]; then
+    #       echo "✅ NVIDIA binaries applied successfully"
+    #     else
+    #       echo "❌ Failed to apply NVIDIA binaries"
+    #       exit 1
+    #     fi
 
     - name: Create default user
       run: |
@@ -281,14 +254,28 @@ jobs:
           -n jetson-orin-nano \
           --accept-license
 
-    - name: Generate SD card image
+    - name: Patch jetson-disk-image-creator.sh for NVME support
+      run: |
+        sed -i '/"USB" | "usb")/,/\*/c\
+            "USB" | "usb")\
+              rootfs_dev="sda1"\
+              ;;\
+            "NVME" | "nvme")\
+              rootfs_dev="nvme0n1p1"\
+              ;;\
+            *)' jetson-disk-image-creator.sh
+
+        sed -i 's/Incorrect root filesystem device - Supported devices - SD, USB/\
+            Incorrect root filesystem device - Supported devices - SD, USB, NVME/g' jetson-disk-image-creator.sh
+
+    - name: Generate disk image
       run: |
         cd ${{ env.WORKSPACE }}/Linux_for_Tegra
 
         # Determine image name
         IMAGE_NAME="${{ github.event.inputs.image_name || 'jetson-orin-nano-custom' }}"
         TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-        FULL_IMAGE_NAME="${IMAGE_NAME}_${TIMESTAMP}.img"
+        FULL_IMAGE_NAME="${IMAGE_NAME}_${TIMESTAMP}_${{ github.event.inputs.image_type }}.img"
 
         echo "Creating SD card image: $FULL_IMAGE_NAME"
 
@@ -297,7 +284,7 @@ jobs:
         sudo ./jetson-disk-image-creator.sh \
           -o "$FULL_IMAGE_NAME" \
           -b jetson-orin-nano-devkit-super \
-          -d SD
+          -d ${{ github.event.inputs.image_type }}
 
         # Move image to workspace root for artifact upload
         sudo mv "$FULL_IMAGE_NAME" ${{ env.WORKSPACE }}/
@@ -325,16 +312,16 @@ jobs:
         - Root Filesystem: Ubuntu 22.04 LTS (ARM64)
         - Default User: jetson / jetson
 
-        Custom Packages Included:
-        - Development tools (git, vim, htop, build-essential, cmake)
-        - Python 3 with common packages (numpy, opencv-python, flask)
-        - Node.js and npm
-        - Docker
-        - CAN utilities and I2C tools
-        - Network management tools
+        # Custom Packages Included:
+        # - Development tools (git, vim, htop, build-essential, cmake)
+        # - Python 3 with common packages (numpy, opencv-python, flask)
+        # - Node.js and npm
+        # - Docker
+        # - CAN utilities and I2C tools
+        # - Network management tools
 
         Usage Instructions:
-        1. Flash to SD card using balenaEtcher or dd command
+        1. Flash to Disk using balenaEtcher or dd command
         2. Insert into Jetson Orin Nano Developer Kit
         3. Power on and complete initial setup
         4. Default login: jetson / jetson (change on first login)
@@ -371,9 +358,9 @@ jobs:
           ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.sha256
           ${{ env.WORKSPACE }}/${{ env.IMAGE_NAME }}.info
         body: |
-          ## Jetson Orin Nano Custom SD Card Image
+          ## Jetson Disk Image
 
-          This release contains a custom SD card image for the NVIDIA Jetson Orin Nano Developer Kit.
+          This release contains a custom Disk image for the NVIDIA Jetson Developer Kit.
 
           ### What's Included
           - L4T Version: ${{ env.L4T_VERSION }}
@@ -385,11 +372,11 @@ jobs:
           ### Installation
           1. Download the `.img.gz` file
           2. Extract using: `xz -d filename.img.gz`
-          3. Flash to SD card using balenaEtcher or dd
-          4. Boot your Jetson Orin Nano
+          3. Flash to Disk using balenaEtcher or dd
+          4. Boot your Jetson
 
           ### Files
-          - `*.img.gz` - Compressed SD card image
+          - `*.img.gz` - Compressed Disk image
           - `*.sha256` - Checksum for verification
           - `*.info` - Build and usage information
 
