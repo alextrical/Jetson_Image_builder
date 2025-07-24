@@ -160,7 +160,7 @@ jobs:
           sudo cp ${{ github.workspace }}/scripts/install_packages.sh install_packages.sh
 
           # Make script executable and run it in chroot
-          chmod +x install_packages.sh
+          sudo chmod +x install_packages.sh
           sudo cp install_packages.sh rootfs/tmp/
           sudo chroot rootfs /tmp/install_packages.sh
 
