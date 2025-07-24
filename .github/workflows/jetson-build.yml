@@ -30,9 +30,9 @@ on:
         default: 'jetson-orin-nano-devkit-super'
 
 env:
-  L4T_MAJOR_VERSION: "${{ github.event.inputs.l4t_major_version || '36' }}"
-  L4T_MINOR_VERSION: "${{ github.event.inputs.l4t_minor_version || '4.4' }}"
-  IMAGE_TYPE: 'NVME'
+  L4T_MAJOR_VERSION: "${{ github.event.env.L4T_MAJOR_VERSION || '36' }}"
+  L4T_MINOR_VERSION: "${{ github.event.env.L4T_MINOR_VERSION || '4.4' }}"
+  IMAGE_TYPE: "${{ github.event.inputs.image_type || 'NVME' }}"
   WORKSPACE: /workspace
   DOWNLOADS: /downloads
 
@@ -102,28 +102,28 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ env.DOWNLOADS }}/Jetson_Linux_aarch64.tbz2
-        key: bsp-${{ inputs.l4t_major_version }}.${{ inputs.l4t_minor_version }}
+        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
 
     - name: Download L4T Driver Package (BSP)
       if: steps.cache-bsp.outputs.cache-hit != 'true'
       run: |
         cd ${{ env.DOWNLOADS }}
         echo "Downloading L4T Driver Package..."
-        wget -q -O Jetson_Linux_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ inputs.l4t_major_version }}_release_v${{ inputs.l4t_minor_version }}/release/Jetson_Linux_r${{ inputs.l4t_major_version }}.${{ inputs.l4t_minor_version }}_aarch64.tbz2
+        wget -q -O Jetson_Linux_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Jetson_Linux_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
 
     - name: Cache Sample RootFS
       id: cache-rootfs
       uses: actions/cache@v4
       with:
         path: ${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2
-        key: rootfs-${{ inputs.l4t_major_version }}.${{ inputs.l4t_minor_version }}
+        key: rootfs-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
 
     - name: Download Sample Root Filesystem
       if: steps.cache-rootfs.outputs.cache-hit != 'true'
       run: |
         cd ${{ env.DOWNLOADS }}
         echo "Downloading Sample Root Filesystem..."
-        wget -q -O Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ inputs.l4t_major_version }}_release_v${{ inputs.l4t_minor_version }}/release/Tegra_Linux_Sample-Root-Filesystem_r${{ inputs.l4t_major_version }}.${{ inputs.l4t_minor_version }}_aarch64.tbz2
+        wget -q -O Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
 
     - name: Extract L4T packages
       run: |
