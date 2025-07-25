@@ -48,13 +48,13 @@ jobs:
         path: ${{ env.WORKSPACE }}
         key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
 
-    - name: Download L4T Driver Package (BSP)
+    - name: Download L4T Driver Package & Sample Root filesystem
       if: steps.cache-bsp.outputs.cache-hit != 'true'
       run: |
         cd ${{ env.DOWNLOADS }}
-        echo "Downloading L4T Driver Package..."
+        echo "Downloading L4T Driver Package (BSP)..."
         wget -q -O Jetson_Linux_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Jetson_Linux_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
-        echo "Downloading Sample Root Filesystem..."
+        echo "Downloading L4T Sample Root Filesystem..."
         wget -q -O Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
 
     - name: Extract L4T packages
