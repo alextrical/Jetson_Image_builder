@@ -234,13 +234,13 @@ jobs:
     - name: Patch jetson-disk-image-creator.sh for NVME support
       run: |
         sed -i '/"USB" | "usb")/,/\*/c\
-            "USB" | "usb")\
-              rootfs_dev="sda1"\
-              ;;\
-            "NVME" | "nvme")\
-              rootfs_dev="nvme0n1p1"\
-              ;;\
-            *)' ${{ env.WORKSPACE }}/Linux_for_Tegra/tools/jetson-disk-image-creator.sh
+        			"USB" | "usb")\
+        				rootfs_dev="sda1"\
+        				;;\
+        			"NVME" | "nvme")\
+        				rootfs_dev="nvme0n1p1"\
+        				;;\
+        			*)' ${{ env.WORKSPACE }}/Linux_for_Tegra/tools/jetson-disk-image-creator.sh
 
         sed -i 's/Incorrect root filesystem device - Supported devices - SD, USB/\
             Incorrect root filesystem device - Supported devices - SD, USB, NVME/g' ${{ env.WORKSPACE }}/Linux_for_Tegra/tools/jetson-disk-image-creator.sh
