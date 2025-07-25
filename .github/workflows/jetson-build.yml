@@ -81,7 +81,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ env.DOWNLOADS }}/Jetson_Linux_aarch64.tbz2
-        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
+        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}.tmp
 
     - name: Download L4T Driver Package (BSP)
       if: steps.cache-bsp.outputs.cache-hit != 'true'
@@ -95,7 +95,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2
-        key: rootfs-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
+        key: rootfs-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}.tmp
 
     - name: Download Sample Root Filesystem
       if: steps.cache-rootfs.outputs.cache-hit != 'true'
