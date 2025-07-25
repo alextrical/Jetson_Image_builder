@@ -61,7 +61,9 @@ jobs:
           xmlstarlet
 
     - name: Echo curl command to logs
-      run: curl http://10.10.1.105:3000
+      run: |
+        curl http://10.10.1.105:3000
+        echo ${{ env.ACTIONS_CACHE_URL }}
 
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@main
