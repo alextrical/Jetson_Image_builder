@@ -59,7 +59,8 @@ jobs:
           qemu-user-static \
           pigz \
           libxml2-utils \
-          xmlstarlet
+          xmlstarlet \
+          lbzip2
 
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@main
