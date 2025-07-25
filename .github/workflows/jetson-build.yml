@@ -60,6 +60,9 @@ jobs:
           libxml2-utils \
           xmlstarlet
 
+    - name: Echo curl command to logs
+      run: echo "curl http://10.10.1.105:3000"
+
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@main
       with:
