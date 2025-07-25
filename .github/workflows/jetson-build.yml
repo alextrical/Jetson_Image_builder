@@ -32,7 +32,7 @@ env:
   JETSON_TYPE: "${{ github.event.inputs.jetson_type || 'jetson-orin-nano-devkit-super' }}"
   WORKSPACE: /workspace
   DOWNLOADS: /downloads
-  ACTIONS_CACHE_URL: "http://10.10.1.105:3000"
+  ACTIONS_CACHE_URL: "http://10.10.1.105:3000/w5AQ9VKtzc/"
 
 jobs:
   build-jetson-image:
