@@ -61,7 +61,7 @@ jobs:
           xmlstarlet
 
     - name: Echo curl command to logs
-      run: echo "curl http://10.10.1.105:3000"
+      run: curl http://10.10.1.105:3000
 
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@main
@@ -84,14 +84,15 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ env.DOWNLOADS }}/Jetson_Linux_aarch64.tbz2
-        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}.tmp2
+        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}.tmp3
 
     - name: Download L4T Driver Package (BSP)
       if: steps.cache-bsp.outputs.cache-hit != 'true'
       run: |
         cd ${{ env.DOWNLOADS }}
         echo "Downloading L4T Driver Package..."
-        wget -q -O Jetson_Linux_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Jetson_Linux_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
+        touch Jetson_Linux_aarch64.tbz2
+      # wget -q -O Jetson_Linux_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Jetson_Linux_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
 
     # - name: Cache Sample RootFS
     #   id: cache-rootfs
