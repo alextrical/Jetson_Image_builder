@@ -43,44 +43,44 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up workspace
-      run: |
-        sudo mkdir -p ${{ env.WORKSPACE }}
-        sudo chown $USER:$USER ${{ env.WORKSPACE }}
-        sudo mkdir -p ${{ env.DOWNLOADS }}
-        sudo chown $USER:$USER ${{ env.DOWNLOADS }}
-        cd ${{ env.WORKSPACE }}
+    # - name: Set up workspace
+    #   run: |
+    #     sudo mkdir -p ${{ env.WORKSPACE }}
+    #     sudo chown $USER:$USER ${{ env.WORKSPACE }}
+    #     sudo mkdir -p ${{ env.DOWNLOADS }}
+    #     sudo chown $USER:$USER ${{ env.DOWNLOADS }}
+    #     cd ${{ env.WORKSPACE }}
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          binfmt-support \
-          qemu-user-static \
-          pigz \
-          libxml2-utils \
-          xmlstarlet
+    # - name: Install dependencies
+    #   run: |
+    #     sudo apt-get update
+    #     sudo apt-get install -y \
+    #       binfmt-support \
+    #       qemu-user-static \
+    #       pigz \
+    #       libxml2-utils \
+    #       xmlstarlet
 
     - name: Echo curl command to logs
       run: |
         curl http://10.10.1.105:3000
         echo ${{ env.ACTIONS_CACHE_URL }}
 
-    - name: Free Disk Space
-      uses: jlumbroso/free-disk-space@main
-      with:
-        tool-cache: true
-        android: true
-        dotnet: true
-        haskell: true
-        large-packages: true
-        docker-images: false
-        swap-storage: true
+    # - name: Free Disk Space
+    #   uses: jlumbroso/free-disk-space@main
+    #   with:
+    #     tool-cache: true
+    #     android: true
+    #     dotnet: true
+    #     haskell: true
+    #     large-packages: true
+    #     docker-images: false
+    #     swap-storage: true
 
-    - name: Set up QEMU for ARM64 emulation
-      run: |
-        sudo update-binfmts --enable qemu-aarch64
-        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    # - name: Set up QEMU for ARM64 emulation
+    #   run: |
+    #     sudo update-binfmts --enable qemu-aarch64
+    #     docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
     - name: Cache L4T BSP
       id: cache-bsp
