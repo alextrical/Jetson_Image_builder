@@ -84,7 +84,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ env.DOWNLOADS }}/Jetson_Linux_aarch64.tbz2
-        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}.tmp1
+        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}.tmp2
 
     - name: Download L4T Driver Package (BSP)
       if: steps.cache-bsp.outputs.cache-hit != 'true'
