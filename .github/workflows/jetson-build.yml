@@ -72,11 +72,9 @@ jobs:
 
     - name: Set up workspace
       run: |
-        sudo mkdir -p ${{ env.GITHUB_WORKSPACE }}
-        sudo chown $USER:$USER ${{ env.GITHUB_WORKSPACE }}
         sudo mkdir -p ${{ env.DOWNLOADS }}
         sudo chown $USER:$USER ${{ env.DOWNLOADS }}
-        cd ${{ env.GITHUB_WORKSPACE }}
+        cd $GITHUB_WORKSPACE
 
     - name: Install dependencies
       run: |
@@ -143,7 +141,7 @@ jobs:
 
     - name: Extract L4T packages
       run: |
-        cd ${{ env.GITHUB_WORKSPACE }}
+        cd $GITHUB_WORKSPACE
 
         echo "Extracting L4T Driver Package..."
         tar -xf ${{ env.DOWNLOADS }}/Jetson_Linux_aarch64.tbz2
@@ -154,7 +152,7 @@ jobs:
 
     - name: Add custom packages to rootfs
       run: |
-        cd ${{ env.GITHUB_WORKSPACE }}/Linux_for_Tegra
+        cd $GITHUB_WORKSPACE/Linux_for_Tegra
 
         if [ -f "${{ github.workspace }}/scripts/install_packages.sh" ]; then
           # Install additional packages in rootfs using chroot
@@ -194,7 +192,7 @@ jobs:
 
     # - name: Copy custom files to rootfs
     #   run: |
-    #     cd ${{ env.GITHUB_WORKSPACE }}/Linux_for_Tegra
+    #     cd $GITHUB_WORKSPACE/Linux_for_Tegra
 
     #     # Copy any custom files from repository to rootfs
     #     if [ -d "${{ github.workspace }}/rootfs-overlay" ]; then
@@ -246,7 +244,7 @@ jobs:
     - name: Apply NVIDIA proprietary binaries
       run: |
         echo "Applying NVIDIA L4T binaries..."
-        sudo ${{ env.GITHUB_WORKSPACE }}/Linux_for_Tegra/apply_binaries.sh
+        sudo $GITHUB_WORKSPACE/Linux_for_Tegra/apply_binaries.sh
 
         # Verify the script completed successfully
         if [ $? -eq 0 ]; then
@@ -259,7 +257,7 @@ jobs:
     - name: Create default user
       run: |
         echo "Creating default user..."
-        sudo ${{ env.GITHUB_WORKSPACE }}/Linux_for_Tegra/tools/l4t_create_default_user.sh \
+        sudo $GITHUB_WORKSPACE/Linux_for_Tegra/tools/l4t_create_default_user.sh \
           -u jetson \
           -p jetson \
           -a \
@@ -275,14 +273,14 @@ jobs:
         			"NVME" | "nvme")\
         				rootfs_dev="nvme0n1p1"\
         				;;\
-        			*)' ${{ env.GITHUB_WORKSPACE }}/Linux_for_Tegra/tools/jetson-disk-image-creator.sh
+        			*)' $GITHUB_WORKSPACE/Linux_for_Tegra/tools/jetson-disk-image-creator.sh
 
         sed -i 's/Incorrect root filesystem device - Supported devices - SD, USB/\
-            Incorrect root filesystem device - Supported devices - SD, USB, NVME/g' ${{ env.GITHUB_WORKSPACE }}/Linux_for_Tegra/tools/jetson-disk-image-creator.sh
+            Incorrect root filesystem device - Supported devices - SD, USB, NVME/g' $GITHUB_WORKSPACE/Linux_for_Tegra/tools/jetson-disk-image-creator.sh
 
     - name: Generate ${{ env.IMAGE_TYPE }} image
       run: |
-        cd ${{ env.GITHUB_WORKSPACE }}/Linux_for_Tegra
+        cd $GITHUB_WORKSPACE/Linux_for_Tegra
 
         # Determine image name
         IMAGE_NAME="${{ env.JETSON_TYPE }}"
@@ -299,10 +297,10 @@ jobs:
           -d ${{ env.IMAGE_TYPE }}
 
         # Move image to workspace root for artifact upload
-        sudo mv "$FULL_IMAGE_NAME" ${{ env.GITHUB_WORKSPACE }}/
+        sudo mv "$FULL_IMAGE_NAME" $GITHUB_WORKSPACE/
 
         # Create checksum
-        cd ${{ env.GITHUB_WORKSPACE }}
+        cd $GITHUB_WORKSPACE
         sha256sum "$FULL_IMAGE_NAME" > "$FULL_IMAGE_NAME.sha256"
 
         # Create image info file
@@ -346,7 +344,7 @@ jobs:
 
     - name: Compress image for faster upload
       run: |
-        cd ${{ env.GITHUB_WORKSPACE }}
+        cd $GITHUB_WORKSPACE
         echo "Compressing image for upload..."
         pigz "${IMAGE_NAME}"
         ls -lht "${IMAGE_NAME}.gz"
@@ -356,9 +354,9 @@ jobs:
     #   with:
     #     name: jetson-orin-nano-image-${{ github.run_number }}
     #     path: |
-    #       ${{ env.GITHUB_WORKSPACE }}/${{ env.IMAGE_NAME }}.gz
-    #       ${{ env.GITHUB_WORKSPACE }}/${{ env.IMAGE_NAME }}.sha256
-    #       ${{ env.GITHUB_WORKSPACE }}/${{ env.IMAGE_NAME }}.info
+    #       $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.gz
+    #       $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.sha256
+    #       $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.info
     #     retention-days: 30
 
     # - name: Create release on tag
@@ -366,9 +364,9 @@ jobs:
     #   uses: softprops/action-gh-release@v1
     #   with:
     #     files: |
-    #       ${{ env.GITHUB_WORKSPACE }}/${{ env.IMAGE_NAME }}.gz
-    #       ${{ env.GITHUB_WORKSPACE }}/${{ env.IMAGE_NAME }}.sha256
-    #       ${{ env.GITHUB_WORKSPACE }}/${{ env.IMAGE_NAME }}.info
+    #       $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.gz
+    #       $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.sha256
+    #       $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.info
     #     body: |
     #       ## Jetson ${{ env.IMAGE_TYPE }} Image
 
@@ -402,4 +400,4 @@ jobs:
     #   if: always()
     #   run: |
     #     cd /
-    #     sudo rm -rf ${{ env.GITHUB_WORKSPACE }} || true
+    #     sudo rm -rf $GITHUB_WORKSPACE || true
