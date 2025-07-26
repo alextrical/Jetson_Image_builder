@@ -121,7 +121,7 @@ jobs:
 
         echo "Extracting Sample Root Filesystem..."
         cd Linux_for_Tegra/rootfs/
-        sudo tar -xpf ${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2
+        sudo tar -xpf $GITHUB_WORKSPACE/${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2
 
     # - name: Add custom packages to rootfs
     #   run: |
@@ -374,8 +374,8 @@ jobs:
     #   env:
     #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Cleanup workspace
-      if: always()
-      run: |
-        cd /
-        sudo rm -rf $GITHUB_WORKSPACE || true
+    # - name: Cleanup workspace
+    #   if: always()
+    #   run: |
+    #     cd /
+    #     sudo rm -rf $GITHUB_WORKSPACE || true
