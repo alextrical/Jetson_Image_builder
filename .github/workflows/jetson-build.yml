@@ -41,19 +41,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up workspace
-      run: |
-        sudo mkdir -p ${{ env.WORKSPACE }}
-        sudo chown $USER:$USER ${{ env.WORKSPACE }}
-        sudo mkdir -p ${{ env.DOWNLOADS }}
-        sudo chown $USER:$USER ${{ env.DOWNLOADS }}
-        cd ${{ env.WORKSPACE }}
-
     - name: Cache L4T BSP and Sample Root FS
       id: cache-bsp
       uses: actions/cache@v4
       with:
-        path: ${{ env.WORKSPACE }}/../cache.tgz
+        path: ${{ env.DOWNLOADS }}
         key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
 
     # - name: Download L4T Driver Package & Sample Root filesystem
@@ -76,8 +68,6 @@ jobs:
         echo "Extracting Sample Root Filesystem..."
         cd Linux_for_Tegra/rootfs/
         sudo tar -xpf ${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2
-
-        sudo tar -czf ${{ env.WORKSPACE }}/../cache.tgz ${{ env.WORKSPACE }}
 
   # build-jetson-image:
   #   runs-on: self-hosted
