@@ -8,7 +8,7 @@ sudo apt purge -y \
 
 sudo apt autoremove -y
 
-apt-get upgrade -y
+## apt-get upgrade -y
 # apt-get install -y \
 #     curl \
 #     wget \
