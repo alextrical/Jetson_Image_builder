@@ -109,9 +109,6 @@ jobs:
         key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
         fail-on-cache-miss: true
 
-    - name: Verify downloads directory exists
-      run: ls -alh ${{ env.DOWNLOADS }}
-
     - name: Extract L4T packages
       run: |
         cd $GITHUB_WORKSPACE
