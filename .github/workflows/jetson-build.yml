@@ -69,11 +69,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up workspace
-      run: |
-        sudo mkdir -p ${{ env.DOWNLOADS }}
-        sudo chown $USER:$USER ${{ env.DOWNLOADS }}
-        cd $GITHUB_WORKSPACE
+    # - name: Set up workspace
+    #   run: |
+    #     sudo mkdir -p ${{ env.DOWNLOADS }}
+    #     sudo chown $USER:$USER ${{ env.DOWNLOADS }}
+    #     cd $GITHUB_WORKSPACE
 
     - name: Install dependencies
       run: |
