@@ -74,6 +74,8 @@ jobs:
     # #     sudo mkdir -p ${{ env.DOWNLOADS }}
     # #     sudo chown $USER:$USER ${{ env.DOWNLOADS }}
     # #     cd $GITHUB_WORKSPACE
+    - name: Create cache directory
+      run: mkdir -p ${{ env.DOWNLOADS }}
 
     # - name: Install dependencies
     #   run: |
