@@ -30,7 +30,7 @@ env:
   L4T_MINOR_VERSION: "${{ github.event.env.L4T_MINOR_VERSION || '4.4' }}"
   IMAGE_TYPE: "${{ github.event.inputs.image_type || 'NVME' }}"
   JETSON_TYPE: "${{ github.event.inputs.jetson_type || 'jetson-orin-nano-devkit-super' }}"
-  DOWNLOADS: ${{ env.RUNNER_TEMP }}/downloads
+  DOWNLOADS: ${{ runner.temp }}/downloads
 
 jobs:
   cache-jetson-downloads:
