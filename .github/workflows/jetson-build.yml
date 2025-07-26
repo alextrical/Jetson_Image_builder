@@ -34,7 +34,7 @@ env:
   DOWNLOADS: /downloads
 
 jobs:
-  cache-jetson-image:
+  cache-jetson-downloads:
     runs-on: self-hosted
 
     steps:
@@ -52,6 +52,7 @@ jobs:
       with:
         path: ${{ env.DOWNLOADS }}
         key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
+        lookup-only: true
 
     - name: Download L4T Driver Package & Sample Root filesystem
       if: steps.cache-bsp.outputs.cache-hit != 'true'
@@ -105,12 +106,13 @@ jobs:
         sudo update-binfmts --enable qemu-aarch64
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
-    - name: Cache L4T BSP and Sample Root FS
+    - name: Restore Cache L4T BSP and Sample Root FS
       id: cache-bsp
       uses: actions/cache@v4
       with:
         path: ${{ env.DOWNLOADS }}
         key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
+        fail-on-cache-miss: true
 
     # - name: Cache L4T BSP
     #   id: cache-bsp
