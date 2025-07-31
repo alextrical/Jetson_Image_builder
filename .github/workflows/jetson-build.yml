@@ -255,6 +255,9 @@ jobs:
       run: |
         sed -i 's/cvb_eeprom_read_size = <0x100>/cvb_eeprom_read_size = <0x0>/g' $GITHUB_WORKSPACE/Linux_for_Tegra/bootloader/generic/BCT/tegra234-mb2-bct-misc-p3767-0000.dts
     
+    - name: Print all environment variables
+      run: env
+
     - name: Generate ${{ env.IMAGE_TYPE }} image
       run: |
         cd $GITHUB_WORKSPACE/Linux_for_Tegra
@@ -273,8 +276,12 @@ jobs:
           -b ${{ env.JETSON_TYPE }} \
           -d ${{ env.IMAGE_TYPE }}
 
+        ls -al
+
         # Move image to workspace root for artifact upload
         sudo mv "$FULL_IMAGE_NAME" $GITHUB_WORKSPACE/
+
+        ls -al
 
         # Create checksum
         cd $GITHUB_WORKSPACE
@@ -325,6 +332,9 @@ jobs:
         echo "Compressing image for upload..."
         pigz "${IMAGE_NAME}"
         ls -lht "${IMAGE_NAME}.gz"
+
+    - name: List all files in $GITHUB_WORKSPACE
+      run: ls -al "$GITHUB_WORKSPACE"
 
     # - name: output to folder on Self Hosted runner
     #   run: |
