@@ -378,8 +378,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Cleanup workspace
-      if: always()
-      run: |
-        cd /
-        sudo rm -rf $GITHUB_WORKSPACE || true
+    # - name: Cleanup workspace
+    #   if: always()
+    #   run: |
+    #     cd /
+    #     sudo rm -rf $GITHUB_WORKSPACE || true
