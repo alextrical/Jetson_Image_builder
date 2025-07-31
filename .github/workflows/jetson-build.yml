@@ -346,9 +346,9 @@ jobs:
       with:
         name: jetson-orin-nano-image-${{ github.run_number }}
         path: |
-          $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.gz
-          $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.sha256
-          $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.info
+          ${{ env.IMAGE_NAME }}.gz
+          ${{ env.IMAGE_NAME }}.sha256
+          ${{ env.IMAGE_NAME }}.info
         retention-days: 30
 
     - name: Create release on tag
@@ -356,9 +356,9 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.gz
-          $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.sha256
-          $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.info
+          ${{ env.IMAGE_NAME }}.gz
+          ${{ env.IMAGE_NAME }}.sha256
+          ${{ env.IMAGE_NAME }}.info
         body: |
           ## Jetson ${{ env.IMAGE_TYPE }} Image
 
