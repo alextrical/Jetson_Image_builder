@@ -326,60 +326,60 @@ jobs:
         pigz "${IMAGE_NAME}"
         ls -lht "${IMAGE_NAME}.gz"
 
-    - name: output to folder on Self Hosted runner
-      run: |
-        cd $GITHUB_WORKSPACE
-        cp "${IMAGE_NAME}" /output
-
-    # - name: Upload build artifacts
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: jetson-orin-nano-image-${{ github.run_number }}
-    #     path: |
-    #       $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.gz
-    #       $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.sha256
-    #       $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.info
-    #     retention-days: 30
-
-    # - name: Create release on tag
-    #   if: startsWith(github.ref, 'refs/tags/')
-    #   uses: softprops/action-gh-release@v1
-    #   with:
-    #     files: |
-    #       $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.gz
-    #       $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.sha256
-    #       $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.info
-    #     body: |
-    #       ## Jetson ${{ env.IMAGE_TYPE }} Image
-
-    #       This release contains a custom ${{ env.IMAGE_TYPE }} image for the NVIDIA ${{ env.JETSON_TYPE }}.
-
-    #       ### What's Included
-    #       - L4T Version: ${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
-    #       - Ubuntu 22.04 LTS ARM64
-    #       - Custom development packages
-    #       - Docker pre-installed
-    #       - Default user: jetson/jetson
-
-    #       ### Installation
-    #       1. Download the `.img.gz` file
-    #       2. Extract using: `xz -d filename.img.gz`
-    #       3. Flash to ${{ env.IMAGE_TYPE }} using balenaEtcher or dd
-    #       4. insert memory into your Jetson
-    #       5. Boot your ${{ env.JETSON_TYPE }}
-
-    #       ### Files
-    #       - `*.img.gz` - Compressed ${{ env.IMAGE_TYPE }} image
-    #       - `*.sha256` - Checksum for verification
-    #       - `*.info` - Build and usage information
-
-    #     draft: false
-    #     prerelease: false
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    # - name: Cleanup workspace
-    #   if: always()
+    # - name: output to folder on Self Hosted runner
     #   run: |
-    #     cd /
-    #     sudo rm -rf $GITHUB_WORKSPACE || true
+    #     cd $GITHUB_WORKSPACE
+    #     cp "${IMAGE_NAME}" /output
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: jetson-orin-nano-image-${{ github.run_number }}
+        path: |
+          $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.gz
+          $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.sha256
+          $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.info
+        retention-days: 30
+
+    - name: Create release on tag
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.gz
+          $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.sha256
+          $GITHUB_WORKSPACE/${{ env.IMAGE_NAME }}.info
+        body: |
+          ## Jetson ${{ env.IMAGE_TYPE }} Image
+
+          This release contains a custom ${{ env.IMAGE_TYPE }} image for the NVIDIA ${{ env.JETSON_TYPE }}.
+
+          ### What's Included
+          - L4T Version: ${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
+          - Ubuntu 22.04 LTS ARM64
+          - Custom development packages
+          - Docker pre-installed
+          - Default user: jetson/jetson
+
+          ### Installation
+          1. Download the `.img.gz` file
+          2. Extract using: `xz -d filename.img.gz`
+          3. Flash to ${{ env.IMAGE_TYPE }} using balenaEtcher or dd
+          4. insert memory into your Jetson
+          5. Boot your ${{ env.JETSON_TYPE }}
+
+          ### Files
+          - `*.img.gz` - Compressed ${{ env.IMAGE_TYPE }} image
+          - `*.sha256` - Checksum for verification
+          - `*.info` - Build and usage information
+
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Cleanup workspace
+      if: always()
+      run: |
+        cd /
+        sudo rm -rf $GITHUB_WORKSPACE || true
