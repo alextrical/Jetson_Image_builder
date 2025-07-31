@@ -34,8 +34,8 @@ env:
 
 jobs:
   cache-jetson-downloads:
-    runs-on: self-hosted
-    # runs-on: ubuntu-22.04
+    # runs-on: self-hosted
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout repository
@@ -62,8 +62,8 @@ jobs:
         wget -q -O Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
 
   build-jetson-image:
-    runs-on: self-hosted
-    # runs-on: ubuntu-22.04
+    # runs-on: self-hosted
+    runs-on: ubuntu-22.04
     needs: cache-jetson-downloads
 
     steps:
