@@ -27,7 +27,7 @@ apt-get purge -y \
 
 
 # Install Python packages
-python3 -m pip install --upgrade --user --no-warn-script-location --root-user-action ignore \
+python3 -m pip install --upgrade --user --no-warn-script-location \
     pip \
     "setuptools<71.0.0" \
     wheel \
@@ -44,6 +44,9 @@ echo \
 https://download.docker.com/linux/ubuntu \
 $(lsb_release -cs) stable" \
 | tee /etc/apt/sources.list.d/docker.list
+# (Re‑)add Nvidia’s GPG key & repo for your Ubuntu release:
+curl -s -L https://nvidia.github.io/libnvidia-container/gpgkey | sudo apt-key add -
+curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
 apt-get update
 
 apt-get install -y \
