@@ -123,96 +123,96 @@ jobs:
         cd Linux_for_Tegra/rootfs/
         sudo tar -xpf $GITHUB_WORKSPACE/${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2
 
-    # - name: Add custom packages to rootfs
-    #   run: |
-    #     cd $GITHUB_WORKSPACE/Linux_for_Tegra
+    - name: Add custom packages to rootfs
+      run: |
+        cd $GITHUB_WORKSPACE/Linux_for_Tegra
 
-    #     if [ -f "${{ github.workspace }}/scripts/install_packages.sh" ]; then
-    #       # Install additional packages in rootfs using chroot
-    #       echo "Setting up chroot environment..."
-    #       sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
+        if [ -f "${{ github.workspace }}/scripts/install_packages.sh" ]; then
+          # Install additional packages in rootfs using chroot
+          echo "Setting up chroot environment..."
+          sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
 
-    #       # Mount necessary filesystems for chroot
-    #       sudo mount --bind /dev rootfs/dev/
-    #       sudo mount --bind /sys rootfs/sys/
-    #       sudo mount --bind /proc rootfs/proc/
-    #       sudo mount --bind /dev/pts rootfs/dev/pts/
+          # Mount necessary filesystems for chroot
+          sudo mount --bind /dev rootfs/dev/
+          sudo mount --bind /sys rootfs/sys/
+          sudo mount --bind /proc rootfs/proc/
+          sudo mount --bind /dev/pts rootfs/dev/pts/
 
-    #       # Copy resolv.conf for network access in chroot
-    #       sudo cp /etc/resolv.conf rootfs/etc/resolv.conf.bak
-    #       sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
+          # Copy resolv.conf for network access in chroot
+          sudo cp /etc/resolv.conf rootfs/etc/resolv.conf.bak
+          sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
 
-    #       # Copy script to install packages in chroot
-    #       echo "Copying install_packages.sh file from scripts..."
-    #       cp ${{ github.workspace }}/scripts/install_packages.sh install_packages.sh
+          # Copy script to install packages in chroot
+          echo "Copying install_packages.sh file from scripts..."
+          cp ${{ github.workspace }}/scripts/install_packages.sh install_packages.sh
 
-    #       # Make script executable and run it in chroot
-    #       chmod +x install_packages.sh
-    #       sudo cp install_packages.sh rootfs/tmp/
-    #       sudo chroot rootfs /tmp/install_packages.sh
+          # Make script executable and run it in chroot
+          chmod +x install_packages.sh
+          sudo cp install_packages.sh rootfs/tmp/
+          sudo chroot rootfs /tmp/install_packages.sh
 
-    #       # Clean up chroot
-    #       sudo rm rootfs/tmp/install_packages.sh
-    #       sudo rm rootfs/etc/resolv.conf
-    #       sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
+          # Clean up chroot
+          sudo rm rootfs/tmp/install_packages.sh
+          sudo rm rootfs/etc/resolv.conf
+          sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
 
-    #       # Unmount filesystems
-    #       sudo umount rootfs/dev/pts/ || true
-    #       sudo umount rootfs/dev/ || true
-    #       sudo umount rootfs/sys/ || true
-    #       sudo umount rootfs/proc/ || true
-    #     fi
+          # Unmount filesystems
+          sudo umount rootfs/dev/pts/ || true
+          sudo umount rootfs/dev/ || true
+          sudo umount rootfs/sys/ || true
+          sudo umount rootfs/proc/ || true
+        fi
 
-    # # - name: Copy custom files to rootfs
-    # #   run: |
-    # #     cd $GITHUB_WORKSPACE/Linux_for_Tegra
+    - name: Copy custom files to rootfs
+      run: |
+        cd $GITHUB_WORKSPACE/Linux_for_Tegra
 
-    # #     # Copy any custom files from repository to rootfs
-    # #     if [ -d "${{ github.workspace }}/rootfs-overlay" ]; then
-    # #       echo "Copying custom files from rootfs-overlay..."
-    # #       sudo cp -r ${{ github.workspace }}/rootfs-overlay/* rootfs/
-    # #     fi
+        # Copy any custom files from repository to rootfs
+        if [ -d "${{ github.workspace }}/rootfs-overlay" ]; then
+          echo "Copying custom files from rootfs-overlay..."
+          sudo cp -r ${{ github.workspace }}/rootfs-overlay/* rootfs/
+        fi
 
-    # #     # Create custom startup script
-    # #     sudo mkdir -p rootfs/opt/custom
-    # #     cat > custom_startup.sh << 'EOF'
-    # #     #!/bin/bash
-    # #     # Custom startup script for Jetson Orin Nano
-    # #     echo "Starting custom Jetson Orin Nano initialization..."
+        # # Create custom startup script
+        # sudo mkdir -p rootfs/opt/custom
+        # cat > custom_startup.sh << 'EOF'
+        # #!/bin/bash
+        # # Custom startup script for Jetson Orin Nano
+        # echo "Starting custom Jetson Orin Nano initialization..."
 
-    # #     # Enable SSH
-    # #     systemctl enable ssh
-    # #     systemctl start ssh
+        # # Enable SSH
+        # systemctl enable ssh
+        # systemctl start ssh
 
-    # #     # Set up Docker
-    # #     usermod -aG docker $USER
+        # # Set up Docker
+        # usermod -aG docker $USER
 
-    # #     # Custom hardware initialization
-    # #     # Add your custom hardware setup here
+        # # Custom hardware initialization
+        # # Add your custom hardware setup here
 
-    # #     echo "Custom initialization completed!"
-    # #     EOF
+        # echo "Custom initialization completed!"
+        # EOF
 
-    # #     sudo cp custom_startup.sh rootfs/opt/custom/
-    # #     sudo chmod +x rootfs/opt/custom/custom_startup.sh
+        # sudo cp custom_startup.sh rootfs/opt/custom/
+        # sudo chmod +x rootfs/opt/custom/custom_startup.sh
 
-    # #     # Add to systemd for automatic execution
-    # #     cat > jetson-custom-init.service << 'EOF'
-    # #     [Unit]
-    # #     Description=Jetson Custom Initialization
-    # #     After=multi-user.target
+        # # Add to systemd for automatic execution
+        # cat > jetson-custom-init.service << 'EOF'
+        # [Unit]
+        # Description=Jetson Custom Initialization
+        # After=multi-user.target
 
-    # #     [Service]
-    # #     Type=oneshot
-    # #     ExecStart=/opt/custom/custom_startup.sh
-    # #     RemainAfterExit=yes
+        # [Service]
+        # Type=oneshot
+        # ExecStart=/opt/custom/custom_startup.sh
+        # RemainAfterExit=yes
 
-    # #     [Install]
-    # #     WantedBy=multi-user.target
-    # #     EOF
+        # [Install]
+        # WantedBy=multi-user.target
+        # EOF
 
-    # #     sudo cp jetson-custom-init.service rootfs/etc/systemd/system/
-    # #     sudo chroot rootfs systemctl enable jetson-custom-init.service
+        # sudo cp jetson-custom-init.service rootfs/etc/systemd/system/
+        # sudo chroot rootfs systemctl enable jetson-custom-init.service
 
     - name: Apply NVIDIA proprietary binaries
       run: |
@@ -250,13 +250,6 @@ jobs:
 
         sed -i 's/Incorrect root filesystem device - Supported devices - SD, USB/\
             Incorrect root filesystem device - Supported devices - SD, USB, NVME/g' $GITHUB_WORKSPACE/Linux_for_Tegra/tools/jetson-disk-image-creator.sh
-    
-    - name: Patch to remove Carrier Board EEPROM
-      run: |
-        sed -i '/cvb_eeprom_i2c_instance = <0x0>;/d; /cvb_eeprom_i2c_slave_address = <0xae>;/d; /cvb_eeprom_read_size = <0x100>;/d' $GITHUB_WORKSPACE/Linux_for_Tegra/bootloader/generic/BCT/tegra234-mb2-bct-misc-p3767-0000.dts
-    
-    - name: Print all environment variables
-      run: env
 
     - name: Generate ${{ env.IMAGE_TYPE }} image
       run: |
@@ -315,7 +308,7 @@ jobs:
         # - Network management tools
 
         Usage Instructions:
-        1. Flash to ${{ env.IMAGE_TYPE }} using balenaEtcher or dd command
+        1. Flash to ${{ env.IMAGE_TYPE }} using Raspberry Pi Imager or dd command
         2. Insert into ${{ env.JETSON_TYPE }}
         3. Power on and complete initial setup
         4. Default login: jetson / jetson (change on first login)
@@ -332,9 +325,6 @@ jobs:
         echo "Compressing image for upload..."
         pigz "${IMAGE_NAME}"
         ls -lht "${IMAGE_NAME}.gz"
-
-    - name: List all files in $GITHUB_WORKSPACE
-      run: ls -al "$GITHUB_WORKSPACE"
 
     # - name: output to folder on Self Hosted runner
     #   run: |
