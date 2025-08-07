@@ -79,14 +79,16 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y \
-          binfmt-support \
-          qemu-user-static \
-          pigz \
-          libxml2-utils \
-          xmlstarlet \
           lbzip2 \
           libncurses5-dev \
-          libncursesw5-dev
+          libncursesw5-dev \
+          libxml2-utils \
+          qemu-user-static \
+          xmlstarlet
+
+
+          # binfmt-support \
+          # pigz \
 
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@main
