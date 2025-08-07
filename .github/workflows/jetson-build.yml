@@ -125,6 +125,19 @@ jobs:
         cd Linux_for_Tegra/rootfs/
         sudo tar -xpf $GITHUB_WORKSPACE/${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2
 
+    - name: Apply NVIDIA proprietary binaries
+      run: |
+        echo "Applying NVIDIA L4T binaries..."
+        sudo $GITHUB_WORKSPACE/Linux_for_Tegra/apply_binaries.sh
+
+        # Verify the script completed successfully
+        if [ $? -eq 0 ]; then
+          echo "✅ NVIDIA binaries applied successfully"
+        else
+          echo "❌ Failed to apply NVIDIA binaries"
+          exit 1
+        fi
+
     - name: Add custom packages to rootfs
       run: |
         cd $GITHUB_WORKSPACE/Linux_for_Tegra
@@ -215,19 +228,6 @@ jobs:
 
         # sudo cp jetson-custom-init.service rootfs/etc/systemd/system/
         # sudo chroot rootfs systemctl enable jetson-custom-init.service
-
-    - name: Apply NVIDIA proprietary binaries
-      run: |
-        echo "Applying NVIDIA L4T binaries..."
-        sudo $GITHUB_WORKSPACE/Linux_for_Tegra/apply_binaries.sh
-
-        # Verify the script completed successfully
-        if [ $? -eq 0 ]; then
-          echo "✅ NVIDIA binaries applied successfully"
-        else
-          echo "❌ Failed to apply NVIDIA binaries"
-          exit 1
-        fi
 
     - name: Create default user
       run: |
