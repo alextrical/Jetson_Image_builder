@@ -18,6 +18,7 @@ apt-get install -y \
     wget \
     python3-pip \
     python3-setuptools \
+    python3-wheel \
     git \
     alsa-utils \
     ffmpeg
@@ -26,7 +27,7 @@ apt-get install -y \
 # Install Python packages
 python3 -m pip install --upgrade --user \
     pip \
-    "setuptools<71.0.0" \ 
+    "setuptools<71.0.0" \
     wheel \
     jetson-stats
 
