@@ -22,7 +22,8 @@ apt-get purge -y \
   printer* \
   thunderbird \
   mono* \
-  --auto-remove
+  --auto-remove \
+   2>&1 | grep -v "is not installed, so not removed"
 
 
 # Install Python packages
