@@ -13,7 +13,8 @@ apt-get install -y \
     python3-wheel \
     git \
     alsa-utils \
-    ffmpeg
+    ffmpeg \
+    ca-certificates
 
 
 #remove applications that have no purpose to be installed on a Headless server
@@ -36,25 +37,29 @@ python3 -m pip install --upgrade --user --no-warn-script-location \
 
 # Install Docker
 export docker_keyring_path="/usr/share/keyrings/docker-archive-keyring.gpg"
-# (Re‑)add Docker’s GPG key & repo for your Ubuntu release:
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --yes --dearmor \
--o ${docker_keyring_path}
+# Add Docker’s GPG key & repo for your Ubuntu release:
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
 echo \
-"deb [arch=$(dpkg --print-architecture) signed-by=${docker_keyring_path}] \
-https://download.docker.com/linux/ubuntu \
-$(lsb_release -cs) stable" \
-| tee /etc/apt/sources.list.d/docker.list
-# (Re‑)add Nvidia’s GPG key & repo for your Ubuntu release:
-curl -s -L https://nvidia.github.io/libnvidia-container/gpgkey | sudo apt-key add -
-curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+$(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Add Nvidia’s GPG key & repo for your Ubuntu release:
+curl -s -L https://nvidia.github.io/libnvidia-container/gpgkey | apt-key add -
+curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
 apt-get update
 
 apt-get install -y \
-  docker-ce=5:27.5* \
-  docker-ce-cli=5:27.5* \
-  nvidia-container \
-  docker-compose \
-  --allow-downgrades
+  docker-ce \
+  docker-ce-cli \
+  containerd.io \
+  docker-buildx-plugin \
+  docker-compose-plugin \
+  nvidia-container
 
 
 # Install yq
