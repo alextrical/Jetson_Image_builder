@@ -68,82 +68,83 @@ jobs:
         echo "Compress L4T..."
         sudo tar --create --preserve-permissions --use-compress-program=zstd -f ${{ github.workspace }}/Linux_for_Tegra.tar.zst -C $GITHUB_WORKSPACE Linux_for_Tegra
 
-  # build-jetson-image:
-  #   # runs-on: self-hosted
-  #   runs-on: ubuntu-22.04
-  #   needs: cache-jetson-downloads
+  build-jetson-image:
+    # runs-on: self-hosted
+    runs-on: ubuntu-22.04
+    needs: cache-jetson-downloads
 
-  #   steps:
-  #   - name: Checkout repository
-  #     uses: actions/checkout@v4
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-  #   - name: Set up workspace
-  #     run: |
-  #       cd $GITHUB_WORKSPACE
-  #       mkdir -p ${{ env.DOWNLOADS }}
+    - name: Set up workspace
+      run: |
+        cd $GITHUB_WORKSPACE
+        mkdir -p ${{ env.DOWNLOADS }}
 
-  #   - name: Install dependencies
-  #     run: |
-  #       sudo apt-get update
-  #       sudo apt-get install -y \
-  #         lbzip2 \
-  #         libncurses5-dev \
-  #         libncursesw5-dev \
-  #         libxml2-utils \
-  #         qemu-user-static \
-  #         xmlstarlet
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          lbzip2 \
+          libncurses5-dev \
+          libncursesw5-dev \
+          libxml2-utils \
+          qemu-user-static \
+          xmlstarlet
 
 
-  #         # binfmt-support \
-  #         # pigz \
+          # binfmt-support \
+          # pigz \
 
-  #   - name: Free Disk Space
-  #     uses: jlumbroso/free-disk-space@main
-  #     with:
-  #       tool-cache: true
-  #       android: true
-  #       dotnet: true
-  #       haskell: true
-  #       large-packages: true
-  #       docker-images: false
-  #       swap-storage: true
+    - name: Free Disk Space
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: true
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: false
+        swap-storage: true
 
-  #   - name: Set up QEMU for ARM64 emulation
-  #     run: |
-  #       sudo update-binfmts --enable qemu-aarch64
-  #       docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    - name: Set up QEMU for ARM64 emulation
+      run: |
+        sudo update-binfmts --enable qemu-aarch64
+        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
-  #   - name: Restore Cache L4T BSP and Sample Root FS
-  #     id: cache-bsp
-  #     uses: actions/cache@v4
-  #     with:
-  #       path: ${{ env.DOWNLOADS }}
-  #       key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
-  #       fail-on-cache-miss: true
+    - name: Restore Cache L4T BSP and Sample Root FS
+      id: cache-bsp
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.DOWNLOADS }}
+        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
+        fail-on-cache-miss: true
 
-  #   - name: Extract L4T packages
-  #     run: |
-  #       cd $GITHUB_WORKSPACE
+    - name: Extract L4T packages
+      run: |
+        cd $GITHUB_WORKSPACE
 
-  #       echo "Extracting L4T Driver Package..."
+        echo "Extracting L4T Driver Package..."
+        sudo tar --extract --same-permissions --use-compress-program=zstd -f Linux_for_Tegra.tar.zst
   #       tar -xf ${{ env.DOWNLOADS }}/Jetson_Linux_aarch64.tbz2
 
   #       echo "Extracting Sample Root Filesystem..."
   #       cd Linux_for_Tegra/rootfs/
   #       sudo tar -xpf $GITHUB_WORKSPACE/${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2
 
-  #   - name: Apply NVIDIA proprietary binaries
-  #     run: |
-  #       echo "Applying NVIDIA L4T binaries..."
-  #       sudo $GITHUB_WORKSPACE/Linux_for_Tegra/apply_binaries.sh
+    - name: Apply NVIDIA proprietary binaries
+      run: |
+        echo "Applying NVIDIA L4T binaries..."
+        sudo $GITHUB_WORKSPACE/Linux_for_Tegra/apply_binaries.sh
 
-  #       # Verify the script completed successfully
-  #       if [ $? -eq 0 ]; then
-  #         echo "✅ NVIDIA binaries applied successfully"
-  #       else
-  #         echo "❌ Failed to apply NVIDIA binaries"
-  #         exit 1
-  #       fi
+        # Verify the script completed successfully
+        if [ $? -eq 0 ]; then
+          echo "✅ NVIDIA binaries applied successfully"
+        else
+          echo "❌ Failed to apply NVIDIA binaries"
+          exit 1
+        fi
 
   #   - name: Add custom packages to rootfs
   #     run: |
