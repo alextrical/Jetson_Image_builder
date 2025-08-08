@@ -48,7 +48,7 @@ jobs:
       id: cache-bsp
       uses: actions/cache@v4
       with:
-        path: $GITHUB_WORKSPACE
+        path: $GITHUB_WORKSPACE/Linux_for_Tegra
         key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted
         lookup-only: true
 
@@ -66,6 +66,9 @@ jobs:
         sudo tar -xjf Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 -C $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/
         echo "Remove Downloads"
         rm -r $GITHUB_WORKSPACE/${{ env.DOWNLOADS }}
+
+    - name: List files in $GITHUB_WORKSPACE
+      run: ls -laR $GITHUB_WORKSPACE
 
   # build-jetson-image:
   #   # runs-on: self-hosted
