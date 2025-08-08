@@ -48,7 +48,7 @@ jobs:
       id: cache-bsp
       uses: actions/cache@v4
       with:
-        path: ${{ github.workspace }}/Linux_for_Tegra
+        path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
         key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted
         lookup-only: true
 
@@ -64,6 +64,9 @@ jobs:
         tar -xjf Jetson_Linux_aarch64.tbz2 -C $GITHUB_WORKSPACE/
         echo "Extracting L4T Sample Root Filesystem..."
         sudo tar -xjf Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 -C $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/
+
+        echo "Compress L4T..."
+        sudo tar --create --preserve-permissions --use-compress-program=zstd -f ${{ github.workspace }}/Linux_for_Tegra.tar.zst -C $GITHUB_WORKSPACE/Linux_for_Tegra
 
   # build-jetson-image:
   #   # runs-on: self-hosted
