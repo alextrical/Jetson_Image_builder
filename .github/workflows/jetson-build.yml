@@ -127,8 +127,8 @@ jobs:
       id: cache-bsp
       uses: actions/cache@v4
       with:
-        path: ${{ env.DOWNLOADS }}
-        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
+        path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
+        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted-Test2
         fail-on-cache-miss: true
 
     - name: List all files in $GITHUB_WORKSPACE
