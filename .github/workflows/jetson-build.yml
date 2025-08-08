@@ -48,8 +48,8 @@ jobs:
       id: cache-bsp
       uses: actions/cache@v4
       with:
-        path: $GITHUB_WORKSPACE/Linux_for_Tegra
-        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted
+        path: $GITHUB_WORKSPACE/Linux_for_Tegra/
+        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted-test
         lookup-only: true
 
     - name: Download and extract L4T Driver Package & Sample Root filesystem
@@ -58,12 +58,12 @@ jobs:
         cd ${{ env.DOWNLOADS }}
         echo "Downloading L4T Driver Package (BSP)..."
         wget -q -O Jetson_Linux_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Jetson_Linux_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
-        echo "Downloading L4T Sample Root Filesystem..."
-        wget -q -O Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
+        # echo "Downloading L4T Sample Root Filesystem..."
+        # wget -q -O Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
         echo "Extracting L4T Driver Package (BSP)..."
         tar -xjf Jetson_Linux_aarch64.tbz2 -C $GITHUB_WORKSPACE/
-        echo "Extracting L4T Sample Root Filesystem..."
-        sudo tar -xjf Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 -C $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/
+        # echo "Extracting L4T Sample Root Filesystem..."
+        # sudo tar -xjf Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 -C $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/
         echo "Remove Downloads"
         rm -r $GITHUB_WORKSPACE/${{ env.DOWNLOADS }}
 
