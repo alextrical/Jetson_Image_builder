@@ -49,7 +49,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
-        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted-Test1
+        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted-Test2
         lookup-only: true
 
     - name: Download and extract L4T Driver Package & Sample Root filesystem
@@ -58,16 +58,19 @@ jobs:
         cd ${{ env.DOWNLOADS }}
         echo "Downloading L4T Driver Package (BSP)..."
         wget -q -O Jetson_Linux_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Jetson_Linux_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
-        echo "Downloading L4T Sample Root Filesystem..."
-        wget -q -O Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
+        # echo "Downloading L4T Sample Root Filesystem..."
+        # wget -q -O Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
         echo "Extracting L4T Driver Package (BSP)..."
         tar -xjf Jetson_Linux_aarch64.tbz2 -C $GITHUB_WORKSPACE/
-        echo "Extracting L4T Sample Root Filesystem..."
-        sudo tar -xjf Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 -C $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/
+        # echo "Extracting L4T Sample Root Filesystem..."
+        # sudo tar -xjf Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 -C $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/
 
         echo "Compress L4T..."
         cd $GITHUB_WORKSPACE
-        sudo tar --create --preserve-permissions --use-compress-program=zstd -f ${{ github.workspace }}/Linux_for_Tegra.tar.zst -C $GITHUB_WORKSPACE Linux_for_Tegra
+        sudo tar --create --preserve-permissions --use-compress-program=zstd -f $GITHUB_WORKSPACE/Linux_for_Tegra.tar.zst -C $GITHUB_WORKSPACE Linux_for_Tegra
+
+    - name: List all files in $GITHUB_WORKSPACE
+      run: ls -lah "$GITHUB_WORKSPACE"
 
   build-jetson-image:
     # runs-on: self-hosted
@@ -78,10 +81,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up workspace
-      run: |
-        cd $GITHUB_WORKSPACE
-        mkdir -p ${{ env.DOWNLOADS }}
+    # - name: Set up workspace
+    #   run: |
+    #     cd $GITHUB_WORKSPACE
+    #     mkdir -p ${{ env.DOWNLOADS }}
 
     # - name: Install dependencies
     #   run: |
