@@ -73,7 +73,7 @@ jobs:
   build-jetson-image:
     # runs-on: self-hosted
     runs-on: ubuntu-22.04
-    needs: cache-jetson-downloads
+    # needs: cache-jetson-downloads
 
     steps:
     - name: Checkout repository
