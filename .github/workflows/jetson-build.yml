@@ -118,9 +118,13 @@ jobs:
 
     - name: Check disk space
       run: |
-        sudo du -sh /usr/* 2>/dev/null
-        sudo du -sh /var/* 2>/dev/null
-        sudo du -sh /var/lib/docker/overlay2
+        # sudo du -sh /usr/* 2>/dev/null
+        # sudo du -sh /var/* 2>/dev/null
+        # sudo du -sh /var/lib/docker/overlay2
+        sudo du -sh /usr/local
+        sudo du -sh /usr/lib
+        sudo du -sh /usr/share
+        sudo du -sh /usr/bin
 
   #   - name: Set up QEMU for ARM64 emulation
   #     run: |
