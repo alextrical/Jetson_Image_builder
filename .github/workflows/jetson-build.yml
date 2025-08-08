@@ -132,7 +132,7 @@ jobs:
         cd $GITHUB_WORKSPACE
 
         echo "Extracting L4T Driver Package..."
-        sudo tar --extract --same-permissions --use-compress-program=zstd -f Linux_for_Tegra.tar.zst
+        sudo tar --extract --same-permissions --use-compress-program=zstd -f ${{ github.workspace }}/Linux_for_Tegra.tar.zst
   #       tar -xf ${{ env.DOWNLOADS }}/Jetson_Linux_aarch64.tbz2
 
   #       echo "Extracting Sample Root Filesystem..."
