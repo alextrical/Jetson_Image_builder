@@ -116,12 +116,23 @@ jobs:
         docker-images: false
         swap-storage: true
 
+    - name: list installed apps
+      run: |
+        apt list --installed
+
+    - name: clean disk space
+      run: |
+        sudo rm -r /usr/local/julia1.11.6
+        sudo rm -r /usr/local/aws-cli
+        sudo rm -r /usr/local/aws-sam-cli
+
     - name: Check disk space
       run: |
         # sudo du -sh /usr/* 2>/dev/null
         # sudo du -sh /var/* 2>/dev/null
         # sudo du -sh /var/lib/docker/overlay2
-        sudo du -sh /usr/local/* 2>/dev/null
+        sudo du -sh /usr/local/bin/* 2>/dev/null
+        sudo du -sh /usr/local/share/* 2>/dev/null
         sudo du -sh /usr/lib/* 2>/dev/null
         sudo du -sh /usr/share/* 2>/dev/null
         sudo du -sh /usr/bin/* 2>/dev/null
