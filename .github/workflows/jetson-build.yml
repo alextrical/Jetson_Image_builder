@@ -68,7 +68,7 @@ jobs:
         rm -r $GITHUB_WORKSPACE/${{ env.DOWNLOADS }}
 
     - name: List files in $GITHUB_WORKSPACE
-      run: ls -laR $GITHUB_WORKSPACE
+      run: ls -la $GITHUB_WORKSPACE
 
   # build-jetson-image:
   #   # runs-on: self-hosted
