@@ -49,7 +49,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
-        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted-Test2
+        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted
         lookup-only: true
 
     - name: Download and extract L4T Driver Package & Sample Root filesystem
@@ -128,7 +128,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
-        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted-Test2
+        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted
         fail-on-cache-miss: true
 
     - name: List all files in $GITHUB_WORKSPACE
