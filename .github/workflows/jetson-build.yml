@@ -33,44 +33,42 @@ env:
   DOWNLOADS: downloads
 
 jobs:
-  cache-jetson-downloads:
-    # runs-on: self-hosted
-    runs-on: ubuntu-22.04
+  # cache-jetson-downloads:
+  #   # runs-on: self-hosted
+  #   runs-on: ubuntu-22.04
 
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+  #   steps:
+  #   - name: Checkout repository
+  #     uses: actions/checkout@v4
 
-    - name: Set up workspace
-      run: mkdir -p ${{ env.DOWNLOADS }}
+  #   - name: Set up workspace
+  #     run: mkdir -p ${{ env.DOWNLOADS }}
 
-    - name: Cache L4T BSP and Sample Root FS
-      id: cache-bsp
-      uses: actions/cache@v4
-      with:
-        path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
-        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted
-        lookup-only: true
+  #   - name: Cache L4T BSP and Sample Root FS
+  #     id: cache-bsp
+  #     uses: actions/cache@v4
+  #     with:
+  #       path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
+  #       key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted
+  #       lookup-only: true
 
-    - name: Download and extract L4T Driver Package & Sample Root filesystem
-      if: steps.cache-bsp.outputs.cache-hit != 'true'
-      run: |
-        cd ${{ env.DOWNLOADS }}
-        echo "Downloading L4T Driver Package (BSP)..."
-        wget -q -O Jetson_Linux_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Jetson_Linux_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
-        # echo "Downloading L4T Sample Root Filesystem..."
-        # wget -q -O Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
-        echo "Extracting L4T Driver Package (BSP)..."
-        tar -xjf Jetson_Linux_aarch64.tbz2 -C $GITHUB_WORKSPACE/
-        # echo "Extracting L4T Sample Root Filesystem..."
-        # sudo tar -xjf Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 -C $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/
+  #   - name: Download and extract L4T Driver Package & Sample Root filesystem
+  #     if: steps.cache-bsp.outputs.cache-hit != 'true'
+  #     run: |
+  #       cd ${{ env.DOWNLOADS }}
+  #       echo "Downloading L4T Driver Package (BSP)..."
+  #       wget -q -O Jetson_Linux_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Jetson_Linux_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
+  #       echo "Downloading L4T Sample Root Filesystem..."
+  #       wget -q -O Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
+  #       echo "Extracting L4T Driver Package (BSP)..."
+  #       tar -xjf Jetson_Linux_aarch64.tbz2 -C $GITHUB_WORKSPACE/
+  #       echo "Extracting L4T Sample Root Filesystem..."
+  #       sudo tar -xjf Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 -C $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/
+  #       echo "Compress L4T..."
+  #       sudo tar --create --preserve-permissions --use-compress-program=zstd -f $GITHUB_WORKSPACE/Linux_for_Tegra.tar.zst -C $GITHUB_WORKSPACE Linux_for_Tegra
 
-        echo "Compress L4T..."
-        cd $GITHUB_WORKSPACE
-        sudo tar --create --preserve-permissions --use-compress-program=zstd -f $GITHUB_WORKSPACE/Linux_for_Tegra.tar.zst -C $GITHUB_WORKSPACE Linux_for_Tegra
-
-    - name: List all files in $GITHUB_WORKSPACE
-      run: ls -lah "$GITHUB_WORKSPACE"
+  #   - name: List all files in $GITHUB_WORKSPACE
+  #     run: ls -lah "$GITHUB_WORKSPACE"
 
   build-jetson-image:
     # runs-on: self-hosted
@@ -81,10 +79,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # - name: Set up workspace
-    #   run: |
-    #     cd $GITHUB_WORKSPACE
-    #     mkdir -p ${{ env.DOWNLOADS }}
+    # # - name: Set up workspace
+    # #   run: |
+    # #     cd $GITHUB_WORKSPACE
+    # #     mkdir -p ${{ env.DOWNLOADS }}
 
     # - name: Install dependencies
     #   run: |
@@ -101,63 +99,70 @@ jobs:
     #       # binfmt-support \
     #       # pigz \
 
-    # - name: Disable man-db to make package install and removal faster
-    #   run: |
-    #     echo 'set man-db/auto-update false' | sudo debconf-communicate >/dev/null
-    #     sudo dpkg-reconfigure man-db
+    - name: Disable man-db to make package install and removal faster
+      run: |
+        echo 'set man-db/auto-update false' | sudo debconf-communicate >/dev/null
+        sudo dpkg-reconfigure man-db
 
-    # - name: Free Disk Space
-    #   # uses: jlumbroso/free-disk-space@main
-    #   uses: jayllyz/free-disk-space@perf/use-rmz
-    #   with:
-    #     tool-cache: true
-    #     android: true
-    #     dotnet: true
-    #     haskell: true
-    #     large-packages: true
-    #     docker-images: false
-    #     swap-storage: true
-
-    # - name: Set up QEMU for ARM64 emulation
-    #   run: |
-    #     sudo update-binfmts --enable qemu-aarch64
-    #     docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-
-    - name: Restore Cache L4T BSP and Sample Root FS
-      id: cache-bsp
-      uses: actions/cache@v4
+    - name: Free Disk Space
+      # uses: jlumbroso/free-disk-space@main
+      uses: jayllyz/free-disk-space@perf/use-rmz
       with:
-        path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
-        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted
-        fail-on-cache-miss: true
+        tool-cache: true
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: false
+        swap-storage: true
 
-    - name: List all files in $GITHUB_WORKSPACE
-      run: ls -lah "$GITHUB_WORKSPACE"
-
-    - name: Extract L4T packages
+    - name: Check disk space
       run: |
-        cd $GITHUB_WORKSPACE
+        df -h
+        sudo du -sh /* 2>/dev/null
+        sudo du -ah / | sort -rh | head -n 20
+        sudo du -sh /var/lib/docker/overlay2
 
-        echo "Extracting L4T Driver Package..."
-        sudo tar --extract --same-permissions --use-compress-program=zstd -f ${{ github.workspace }}/Linux_for_Tegra.tar.zst
-  #       tar -xf ${{ env.DOWNLOADS }}/Jetson_Linux_aarch64.tbz2
+  #   - name: Set up QEMU for ARM64 emulation
+  #     run: |
+  #       sudo update-binfmts --enable qemu-aarch64
+  #       docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
-  #       echo "Extracting Sample Root Filesystem..."
-  #       cd Linux_for_Tegra/rootfs/
-  #       sudo tar -xpf $GITHUB_WORKSPACE/${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2
+  #   - name: Restore Cache L4T BSP and Sample Root FS
+  #     id: cache-bsp
+  #     uses: actions/cache@v4
+  #     with:
+  #       path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
+  #       key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted
+  #       fail-on-cache-miss: true
 
-    - name: Apply NVIDIA proprietary binaries
-      run: |
-        echo "Applying NVIDIA L4T binaries..."
-        sudo $GITHUB_WORKSPACE/Linux_for_Tegra/apply_binaries.sh
+  #   - name: List all files in $GITHUB_WORKSPACE
+  #     run: ls -lah "$GITHUB_WORKSPACE"
 
-        # Verify the script completed successfully
-        if [ $? -eq 0 ]; then
-          echo "✅ NVIDIA binaries applied successfully"
-        else
-          echo "❌ Failed to apply NVIDIA binaries"
-          exit 1
-        fi
+  #   - name: Extract L4T packages
+  #     run: |
+  #       cd $GITHUB_WORKSPACE
+
+  #       echo "Extracting L4T Driver Package..."
+  #       sudo tar --extract --same-permissions --use-compress-program=zstd -f ${{ github.workspace }}/Linux_for_Tegra.tar.zst
+  # #       tar -xf ${{ env.DOWNLOADS }}/Jetson_Linux_aarch64.tbz2
+
+  # #       echo "Extracting Sample Root Filesystem..."
+  # #       cd Linux_for_Tegra/rootfs/
+  # #       sudo tar -xpf $GITHUB_WORKSPACE/${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2
+
+  #   - name: Apply NVIDIA proprietary binaries
+  #     run: |
+  #       echo "Applying NVIDIA L4T binaries..."
+  #       sudo $GITHUB_WORKSPACE/Linux_for_Tegra/apply_binaries.sh
+
+  #       # Verify the script completed successfully
+  #       if [ $? -eq 0 ]; then
+  #         echo "✅ NVIDIA binaries applied successfully"
+  #       else
+  #         echo "❌ Failed to apply NVIDIA binaries"
+  #         exit 1
+  #       fi
 
   #   - name: Add custom packages to rootfs
   #     run: |
