@@ -64,8 +64,6 @@ jobs:
         tar -xjf Jetson_Linux_aarch64.tbz2 -C $GITHUB_WORKSPACE/
         # echo "Extracting L4T Sample Root Filesystem..."
         # sudo tar -xjf Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 -C $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/
-        echo "Remove Downloads"
-        rm -r $GITHUB_WORKSPACE/${{ env.DOWNLOADS }}
 
     - name: List files in $GITHUB_WORKSPACE
       run: ls -la $GITHUB_WORKSPACE
