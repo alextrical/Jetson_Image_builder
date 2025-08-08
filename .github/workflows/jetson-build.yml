@@ -82,42 +82,42 @@ jobs:
         cd $GITHUB_WORKSPACE
         mkdir -p ${{ env.DOWNLOADS }}
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          lbzip2 \
-          libncurses5-dev \
-          libncursesw5-dev \
-          libxml2-utils \
-          qemu-user-static \
-          xmlstarlet
+    # - name: Install dependencies
+    #   run: |
+    #     sudo apt-get update
+    #     sudo apt-get install -y \
+    #       lbzip2 \
+    #       libncurses5-dev \
+    #       libncursesw5-dev \
+    #       libxml2-utils \
+    #       qemu-user-static \
+    #       xmlstarlet
 
 
-          # binfmt-support \
-          # pigz \
+    #       # binfmt-support \
+    #       # pigz \
 
-    - name: Disable man-db to make package install and removal faster
-      run: |
-        echo 'set man-db/auto-update false' | sudo debconf-communicate >/dev/null
-        sudo dpkg-reconfigure man-db
+    # - name: Disable man-db to make package install and removal faster
+    #   run: |
+    #     echo 'set man-db/auto-update false' | sudo debconf-communicate >/dev/null
+    #     sudo dpkg-reconfigure man-db
 
-    - name: Free Disk Space
-      # uses: jlumbroso/free-disk-space@main
-      uses: jayllyz/free-disk-space@perf/use-rmz
-      with:
-        tool-cache: true
-        android: true
-        dotnet: true
-        haskell: true
-        large-packages: true
-        docker-images: false
-        swap-storage: true
+    # - name: Free Disk Space
+    #   # uses: jlumbroso/free-disk-space@main
+    #   uses: jayllyz/free-disk-space@perf/use-rmz
+    #   with:
+    #     tool-cache: true
+    #     android: true
+    #     dotnet: true
+    #     haskell: true
+    #     large-packages: true
+    #     docker-images: false
+    #     swap-storage: true
 
-    - name: Set up QEMU for ARM64 emulation
-      run: |
-        sudo update-binfmts --enable qemu-aarch64
-        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    # - name: Set up QEMU for ARM64 emulation
+    #   run: |
+    #     sudo update-binfmts --enable qemu-aarch64
+    #     docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
     - name: Restore Cache L4T BSP and Sample Root FS
       id: cache-bsp
@@ -126,6 +126,9 @@ jobs:
         path: ${{ env.DOWNLOADS }}
         key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
         fail-on-cache-miss: true
+
+    - name: List all files in $GITHUB_WORKSPACE
+      run: ls -lah "$GITHUB_WORKSPACE"
 
     - name: Extract L4T packages
       run: |
