@@ -14,7 +14,8 @@ apt-get install -y \
     git \
     alsa-utils \
     ffmpeg \
-    ca-certificates
+    ca-certificates \
+    apt-utils
 
 
 #remove applications that have no purpose to be installed on a Headless server
