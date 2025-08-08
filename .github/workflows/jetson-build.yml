@@ -48,7 +48,7 @@ jobs:
       id: cache-bsp
       uses: actions/cache@v4
       with:
-        path: $GITHUB_WORKSPACE/Linux_for_Tegra/
+        path: ${{ github.workspace }}/Linux_for_Tegra
         key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted-test
         lookup-only: true
 
