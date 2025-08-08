@@ -121,10 +121,10 @@ jobs:
         # sudo du -sh /usr/* 2>/dev/null
         # sudo du -sh /var/* 2>/dev/null
         # sudo du -sh /var/lib/docker/overlay2
-        sudo du -sh /usr/local
-        sudo du -sh /usr/lib
-        sudo du -sh /usr/share
-        sudo du -sh /usr/bin
+        sudo du -sh /usr/local/* 2>/dev/null
+        sudo du -sh /usr/lib/* 2>/dev/null
+        sudo du -sh /usr/share/* 2>/dev/null
+        sudo du -sh /usr/bin/* 2>/dev/null
 
   #   - name: Set up QEMU for ARM64 emulation
   #     run: |
