@@ -116,69 +116,74 @@ jobs:
         docker-images: false
         swap-storage: true
 
-    - name: list installed apps
+    # - name: list installed apps
+    #   run: |
+    #     apt list --installed
+
+    # - name: clean disk space
+    #   run: |
+    #     sudo rm -r /usr/local/julia1.11.6
+    #     sudo rm -r /usr/local/aws-cli
+    #     sudo rm -r /usr/local/aws-sam-cli
+    #     sudo rm -rf /usr/local/share/swift
+    #     sudo apt remove powershell
+    #     sudo rm -rf /usr/local/share/powershell
+    #     sudo apt remove openjdk-11-jdk openjdk-11-jre 
+    #     sudo rm -rf /usr/lib/jvm
+    #     sudo rm -rf /usr/local/share/miniconda
+    #     sudo apt remove chromium-browser
+    #     sudo rm -rf /usr/local/share/chromium
+    #     sudo rm -rf /usr/local/share/az_12.5.0
+    #     sudo rm -rf /usr/lib/heroku
+    #     sudo rm -rf /usr/local/share/vcpkg
+    #     sudo rm /usr/local/bin/minikube
+    #     sudo rm /usr/local/bin/oc
+    #     sudo apt remove nodejs
+    #     sudo rm /usr/local/bin/node /usr/local/bin/npm
+    #     sudo rm /usr/local/bin/stack
+    #     sudo rm /usr/local/bin/terraform
+
+
+
+    # - name: Check disk space
+    #   run: |
+    #     # sudo du -sh /usr/* 2>/dev/null
+    #     # sudo du -sh /var/* 2>/dev/null
+    #     # sudo du -sh /var/lib/docker/overlay2
+    #     sudo du -sh /usr/local/bin/* 2>/dev/null
+    #     sudo du -sh /usr/local/share/* 2>/dev/null
+    #     sudo du -sh /usr/lib/* 2>/dev/null
+    #     sudo du -sh /usr/share/* 2>/dev/null
+    #     sudo du -sh /usr/bin/* 2>/dev/null
+
+    - name: Show runner disk usage before
       run: |
-        apt list --installed
+        echo "=== Disk usage before cleanup ==="
+        df -h /
 
-    - name: clean disk space
+    - name: Remove large directories
       run: |
-        sudo rm -r /usr/local/julia1.11.6
-        sudo rm -r /usr/local/aws-cli
-        sudo rm -r /usr/local/aws-sam-cli
-        sudo rm -rf /usr/local/share/swift
-        sudo apt remove powershell
-        sudo rm -rf /usr/local/share/powershell
-        sudo apt remove openjdk-11-jdk openjdk-11-jre 
-        sudo rm -rf /usr/lib/jvm
-        sudo rm -rf /usr/local/share/miniconda
-        sudo apt remove chromium-browser
-        sudo rm -rf /usr/local/share/chromium
-        sudo rm -rf /usr/local/share/az_12.5.0
-        sudo rm -rf /usr/lib/heroku
-        sudo rm -rf /usr/local/share/vcpkg
-        sudo rm /usr/local/bin/minikube
-        sudo rm /usr/local/bin/oc
-        sudo apt remove nodejs
-        sudo rm /usr/local/bin/node /usr/local/bin/npm
-        sudo rm /usr/local/bin/stack
-        sudo rm /usr/local/bin/terraform
+        set -e
+        dirs=(
+            "/usr/local/share/swift"
+            "/usr/local/share/powershell"
+            "/usr/lib/jvm"
+        )
 
-    - name: Free Disk Space
-      # uses: jlumbroso/free-disk-space@main
-      uses: jayllyz/free-disk-space@perf/use-rmz
-      with:
-        tool-cache: true
-        android: true
-        dotnet: true
-        haskell: true
-        large-packages: true
-        docker-images: false
-        swap-storage: true
+        for dir in "${dirs[@]}"; do
+            if [ -d "$dir" ]; then
+                echo "Removing $dir..."
+                sudo rm -rf "$dir"
+                echo "$dir removed."
+            else
+                echo "$dir does not exist. Skipping."
+            fi
+        done
 
-
-
-    - name: Check disk space
+    - name: Show runner disk usage after
       run: |
-        # sudo du -sh /usr/* 2>/dev/null
-        # sudo du -sh /var/* 2>/dev/null
-        # sudo du -sh /var/lib/docker/overlay2
-        sudo du -sh /usr/local/bin/* 2>/dev/null
-        sudo du -sh /usr/local/share/* 2>/dev/null
-        sudo du -sh /usr/lib/* 2>/dev/null
-        sudo du -sh /usr/share/* 2>/dev/null
-        sudo du -sh /usr/bin/* 2>/dev/null
-
-    - name: Free Disk Space
-      # uses: jlumbroso/free-disk-space@main
-      uses: jayllyz/free-disk-space@perf/use-rmz
-      with:
-        tool-cache: true
-        android: true
-        dotnet: true
-        haskell: true
-        large-packages: true
-        docker-images: false
-        swap-storage: true
+        echo "=== Disk usage after cleanup ==="
+        df -h /
 
   #   - name: Set up QEMU for ARM64 emulation
   #     run: |
