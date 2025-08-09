@@ -76,6 +76,23 @@ jobs:
     # needs: cache-jetson-downloads
 
     steps:
+    - name: Maximize build space
+      uses: AdityaGarg8/remove-unwanted-software@v5
+      with:
+        remove-dotnet: 'true'
+        remove-android: 'true'
+        remove-haskell: 'true'
+        remove-codeql: 'true'
+        remove-docker-images: 'true'
+        remove-large-packages: 'true'
+        remove-cached-tools: 'true'
+        remove-swapfile: 'true'
+
+    - name: Show runner disk usage before
+      run: |
+        echo "=== Disk usage before cleanup ==="
+        df -h /
+
     - name: Checkout repository
       uses: actions/checkout@v4
 
@@ -145,6 +162,83 @@ jobs:
                 echo "$dir does not exist. Skipping."
             fi
         done
+
+    - name: Remove pulumi and others
+      run: |
+        sudo apt remove minikube kubectl nodejs terraform pulumi gradle sbt openjdk
+
+        sudo rm -rf /usr/share/miniconda
+        sudo rm -rf /usr/lib/gcc
+        sudo rm -rf /usr/share/az_12.5.0
+        sudo rm -f /usr/local/bin/oc
+        sudo rm -rf /usr/share/sbt
+        sudo rm -rf /usr/share/gradle-9.0.0
+        sudo rm -f /usr/local/bin/minikube
+        sudo rm -rf /usr/lib/modules
+        sudo rm -rf /usr/lib/mono
+        sudo rm -f /usr/local/bin/node
+        sudo rm -f /usr/local/bin/stack
+        sudo rm -f /usr/local/bin/terraform
+        sudo rm -rf /usr/lib/snapd
+        sudo rm -f /usr/local/bin/bicep
+        sudo rm -rf /usr/share/kotlinc
+        sudo rm -f /usr/local/bin/pulumi
+        sudo rm -rf /usr/lib/llvm-14
+        sudo rm -rf /usr/lib/R
+        sudo rm -rf /usr/share/doc
+        sudo rm -rf /usr/lib/llvm-15
+        sudo rm -rf /usr/share/locale
+        sudo rm -rf /usr/lib/llvm-13
+        sudo rm -f /usr/local/bin/aliyun
+        sudo rm -f /usr/local/bin/helm
+        sudo rm -rf /usr/share/ri
+        sudo rm -f /usr/local/bin/azcopy
+        sudo rm -rf /usr/lib/cni
+        sudo rm -rf /usr/lib/python3.10
+        sudo rm -rf /usr/share/java
+        sudo rm -rf /usr/lib/postgresql
+        sudo rm -rf /usr/share/icons
+        sudo rm -f /usr/local/bin/packer
+        sudo rm -rf /usr/share/fonts
+        sudo rm -rf /usr/local/share/edge_driver
+        sudo rm -rf /usr/share/man
+        sudo rm -f /usr/local/bin/cmake-gui
+        sudo rm -f /usr/local/bin/pulumi-language-go
+        sudo rm -f /usr/local/bin/pulumi-language-yaml
+        sudo rm -f /usr/lib/libmono-llvm.so.0.0.0
+        sudo rm -rf /usr/share/python-babel-localedata
+        sudo rm -f /usr/local/bin/pulumi
+        sudo rm -f /usr/local/bin/pulumi-analyzer-policy
+        sudo rm -f /usr/local/bin/pulumi-analyzer-policy-python
+        sudo rm -f /usr/local/bin/pulumi-language-dotnet
+        sudo rm -f /usr/local/bin/pulumi-language-go
+        sudo rm -f /usr/local/bin/pulumi-language-java
+        sudo rm -f /usr/local/bin/pulumi-language-nodejs
+        sudo rm -f /usr/local/bin/pulumi-language-python
+        sudo rm -f /usr/local/bin/pulumi-language-python-exec
+        sudo rm -f /usr/local/bin/pulumi-language-yaml
+        sudo rm -f /usr/local/bin/pulumi-resource-pulumi-nodejs
+        sudo rm -f /usr/local/bin/pulumi-resource-pulumi-python
+        sudo rm -f /usr/local/bin/pulumi-watch
+        sudo rm -rf /usr/local/share/cmake-3.31
+        sudo rm -rf /usr/lib/grub
+        sudo rm -rf /usr/share/perl
+        sudo rm -rf /usr/lib/ruby
+        sudo rm -rf /usr/local/share/chromedriver-linux64
+        sudo rm -rf /usr/lib/udev
+        sudo rm -f /usr/local/bin/ctest
+        sudo rm -f /usr/local/bin/ccmake
+        sudo rm -f /usr/local/bin/cmake
+        sudo rm -f /usr/local/bin/cpack
+        sudo rm -rf /usr/share/i18n
+        sudo rm -rf /usr/lib/linux-azure-6.8-tools-6.8.0-1031
+        sudo rm -f /usr/local/bin/kustomize
+        sudo rm -rf /usr/lib/git-core
+        sudo rm -rf /usr/share/R
+        sudo rm -f /usr/local/bin/kind
+        sudo rm -f /usr/local/bin/oras
+        sudo rm -rf /usr/lib/systemd
+        sudo rm -rf /usr/share/apache-maven-3.9.11
 
     - name: Show runner disk usage after
       run: |
