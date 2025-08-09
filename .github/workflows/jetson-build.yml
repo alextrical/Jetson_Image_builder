@@ -81,18 +81,6 @@ jobs:
         echo 'set man-db/auto-update false' | sudo debconf-communicate >/dev/null
         sudo dpkg-reconfigure man-db
 
-    - name: Free Disk Space
-      # uses: jlumbroso/free-disk-space@main
-      uses: jayllyz/free-disk-space@perf/use-rmz
-      with:
-        tool-cache: true
-        android: true
-        dotnet: true
-        haskell: true
-        large-packages: true
-        docker-images: true
-        swap-storage: true
-
     - name: Maximize build space
       uses: AdityaGarg8/remove-unwanted-software@v5
       with:
@@ -104,6 +92,18 @@ jobs:
         remove-large-packages: 'true'
         remove-cached-tools: 'true'
         remove-swapfile: 'true'
+
+    - name: Free Disk Space
+      # uses: jlumbroso/free-disk-space@main
+      uses: jayllyz/free-disk-space@perf/use-rmz
+      with:
+        tool-cache: true
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: true
+        swap-storage: true
 
     - name: Show runner disk usage before
       run: |
