@@ -113,48 +113,8 @@ jobs:
         dotnet: true
         haskell: true
         large-packages: true
-        docker-images: false
+        docker-images: true
         swap-storage: true
-
-    # - name: list installed apps
-    #   run: |
-    #     apt list --installed
-
-    # - name: clean disk space
-    #   run: |
-    #     sudo rm -r /usr/local/julia1.11.6
-    #     sudo rm -r /usr/local/aws-cli
-    #     sudo rm -r /usr/local/aws-sam-cli
-    #     sudo rm -rf /usr/local/share/swift
-    #     sudo apt remove powershell
-    #     sudo rm -rf /usr/local/share/powershell
-    #     sudo apt remove openjdk-11-jdk openjdk-11-jre 
-    #     sudo rm -rf /usr/lib/jvm
-    #     sudo rm -rf /usr/local/share/miniconda
-    #     sudo apt remove chromium-browser
-    #     sudo rm -rf /usr/local/share/chromium
-    #     sudo rm -rf /usr/local/share/az_12.5.0
-    #     sudo rm -rf /usr/lib/heroku
-    #     sudo rm -rf /usr/local/share/vcpkg
-    #     sudo rm /usr/local/bin/minikube
-    #     sudo rm /usr/local/bin/oc
-    #     sudo apt remove nodejs
-    #     sudo rm /usr/local/bin/node /usr/local/bin/npm
-    #     sudo rm /usr/local/bin/stack
-    #     sudo rm /usr/local/bin/terraform
-
-
-
-    # - name: Check disk space
-    #   run: |
-    #     # sudo du -sh /usr/* 2>/dev/null
-    #     # sudo du -sh /var/* 2>/dev/null
-    #     # sudo du -sh /var/lib/docker/overlay2
-    #     sudo du -sh /usr/local/bin/* 2>/dev/null
-    #     sudo du -sh /usr/local/share/* 2>/dev/null
-    #     sudo du -sh /usr/lib/* 2>/dev/null
-    #     sudo du -sh /usr/share/* 2>/dev/null
-    #     sudo du -sh /usr/bin/* 2>/dev/null
 
     - name: Show runner disk usage before
       run: |
@@ -165,16 +125,12 @@ jobs:
       run: |
         set -e
         dirs=(
-            "/usr/local/share/swift"
             "/usr/local/share/powershell"
             "/usr/lib/jvm"
             "/usr/local/julia1.11.6"
             "/usr/local/aws-cli"
             "/usr/local/aws-sam-cli"
-            "/usr/local/share/powershell"
-            "/usr/local/share/miniconda"
             "/usr/local/share/chromium"
-            "/usr/local/share/az_12.5.0"
             "/usr/lib/heroku"
             "/usr/local/share/vcpkg"
         )
@@ -194,33 +150,42 @@ jobs:
         echo "=== Disk usage after cleanup ==="
         df -h /
 
-    - name: Remove large files
-      run: |
-        set -e
-        files=(
-            "/usr/local/bin/minikube"
-            "/usr/local/bin/oc"
-            "/usr/local/bin/node"
-            "/usr/local/bin/npm"
-            "/usr/local/bin/stack"
-            "/usr/local/bin/terraform"
+    # - name: Remove large files
+    #   run: |
+    #     set -e
+    #     files=(
+    #         "/usr/local/bin/minikube"
+    #         "/usr/local/bin/oc"
+    #         "/usr/local/bin/node"
+    #         "/usr/local/bin/npm"
+    #         "/usr/local/bin/stack"
+    #         "/usr/local/bin/terraform"
 
-        )
+    #     )
 
-        for file in "${files[@]}"; do
-            if [ -d "$file" ]; then
-                echo "Removing $file..."
-                sudo rm -f "$file"
-                echo "$file removed."
-            else
-                echo "$file does not exist. Skipping."
-            fi
-        done
+    #     for file in "${files[@]}"; do
+    #         if [ -d "$file" ]; then
+    #             echo "Removing $file..."
+    #             sudo rm -f "$file"
+    #             echo "$file removed."
+    #         else
+    #             echo "$file does not exist. Skipping."
+    #         fi
+    #     done
 
     - name: Show runner disk usage after
       run: |
         echo "=== Disk usage after cleanup ==="
         df -h /
+
+    - name: Check disk space
+      run: |
+        sudo du -sh /var/lib/docker/overlay2
+        sudo du -sh /usr/local/bin/* 2>/dev/null
+        sudo du -sh /usr/local/share/* 2>/dev/null
+        sudo du -sh /usr/lib/* 2>/dev/null
+        sudo du -sh /usr/share/* 2>/dev/null
+        sudo du -sh /usr/bin/* 2>/dev/null
 
   #   - name: Set up QEMU for ARM64 emulation
   #     run: |
