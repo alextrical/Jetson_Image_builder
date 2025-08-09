@@ -133,6 +133,7 @@ jobs:
             "/usr/local/share/chromium"
             "/usr/lib/heroku"
             "/usr/local/share/vcpkg"
+            "/usr/share/swift"
         )
 
         for dir in "${dirs[@]}"; do
