@@ -165,22 +165,32 @@ jobs:
 
     - name: Remove pulumi and others
       run: |
-        sudo apt remove minikube kubectl nodejs terraform pulumi gradle sbt openjdk
+        sudo apt remove kubectl nodejs gradle
 
-        sudo rm -rf /usr/share/miniconda
-        sudo rm -rf /usr/lib/gcc
         sudo rm -rf /usr/share/az_12.5.0
+        echo "az_12.5.0"
         sudo rm -f /usr/local/bin/oc
+        echo "oc"
         sudo rm -rf /usr/share/sbt
+        echo "sbt"
         sudo rm -rf /usr/share/gradle-9.0.0
+        echo "gradle"
         sudo rm -f /usr/local/bin/minikube
+        echo "minikube"
         sudo rm -rf /usr/lib/modules
+        echo "modules"
         sudo rm -rf /usr/lib/mono
+        echo "mono"
         sudo rm -f /usr/local/bin/node
+        echo "node"
         sudo rm -f /usr/local/bin/stack
+        echo "stack"
         sudo rm -f /usr/local/bin/terraform
+        echo "terraform"
         sudo rm -rf /usr/lib/snapd
+        echo "snapd"
         sudo rm -f /usr/local/bin/bicep
+        echo "bicep"
         sudo rm -rf /usr/share/kotlinc
         sudo rm -f /usr/local/bin/pulumi
         sudo rm -rf /usr/lib/llvm-14
@@ -239,6 +249,8 @@ jobs:
         sudo rm -f /usr/local/bin/oras
         sudo rm -rf /usr/lib/systemd
         sudo rm -rf /usr/share/apache-maven-3.9.11
+        sudo rm -rf /usr/share/miniconda
+        sudo rm -rf /usr/lib/gcc
 
     - name: Show runner disk usage after
       run: |
