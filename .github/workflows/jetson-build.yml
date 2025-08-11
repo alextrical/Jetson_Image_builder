@@ -67,7 +67,7 @@ jobs:
         sudo tar --create --preserve-permissions --use-compress-program=zstd -f $GITHUB_WORKSPACE/Linux_for_Tegra.tar.zst -C $GITHUB_WORKSPACE Linux_for_Tegra
 
   build-jetson-image:
-    runs-on: self-hosted
+    # runs-on: self-hosted
     runs-on: ubuntu-22.04
     # needs: cache-jetson-downloads
 
