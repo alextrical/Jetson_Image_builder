@@ -289,12 +289,8 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE
         echo "Compressing image for upload..."
-
-        # Compress with pigz
-        pigz -c "${IMAGE_NAME}"
-
-        # Show resulting file size
-        du -h "${IMAGE_NAME}.gz"
+        pigz "${IMAGE_NAME}"
+        ls -lht "${IMAGE_NAME}.gz"
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
