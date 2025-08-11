@@ -1,8 +1,8 @@
-name: Build Jetson Orin Nano SD Card Image
+name: Build Jetson Orin Nano Disk Image - Self Hosted
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, selfhosted ]
     tags: [ 'v*' ]
   pull_request:
     branches: [ main, master ]
@@ -25,53 +25,49 @@ on:
         required: false
         default: 'jetson-orin-nano-devkit-super'
 
+# permissions:
+#   contents: read
+
 env:
   L4T_MAJOR_VERSION: "${{ github.event.env.L4T_MAJOR_VERSION || '36' }}"
   L4T_MINOR_VERSION: "${{ github.event.env.L4T_MINOR_VERSION || '4.4' }}"
   IMAGE_TYPE: "${{ github.event.inputs.image_type || 'NVME' }}"
   JETSON_TYPE: "${{ github.event.inputs.jetson_type || 'jetson-orin-nano-devkit-super' }}"
-  DOWNLOADS: downloads
+  OEM_USER: "jetson"
 
 jobs:
-  # cache-jetson-downloads:
-  #   # runs-on: self-hosted
-  #   runs-on: ubuntu-22.04
+  cache-jetson-downloads:
+    # runs-on: self-hosted
+    runs-on: ubuntu-22.04
 
-  #   steps:
-  #   - name: Checkout repository
-  #     uses: actions/checkout@v4
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-  #   - name: Set up workspace
-  #     run: mkdir -p ${{ env.DOWNLOADS }}
+    - name: Cache L4T BSP and Sample Root FS
+      id: cache-bsp
+      uses: actions/cache@v4
+      with:
+        path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
+        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted
+        lookup-only: true
 
-  #   - name: Cache L4T BSP and Sample Root FS
-  #     id: cache-bsp
-  #     uses: actions/cache@v4
-  #     with:
-  #       path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
-  #       key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted
-  #       lookup-only: true
-
-  #   - name: Download and extract L4T Driver Package & Sample Root filesystem
-  #     if: steps.cache-bsp.outputs.cache-hit != 'true'
-  #     run: |
-  #       cd ${{ env.DOWNLOADS }}
-  #       echo "Downloading L4T Driver Package (BSP)..."
-  #       wget -q -O Jetson_Linux_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Jetson_Linux_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
-  #       echo "Downloading L4T Sample Root Filesystem..."
-  #       wget -q -O Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
-  #       echo "Extracting L4T Driver Package (BSP)..."
-  #       tar -xjf Jetson_Linux_aarch64.tbz2 -C $GITHUB_WORKSPACE/
-  #       echo "Extracting L4T Sample Root Filesystem..."
-  #       sudo tar -xjf Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 -C $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/
-  #       echo "Compress L4T..."
-  #       sudo tar --create --preserve-permissions --use-compress-program=zstd -f $GITHUB_WORKSPACE/Linux_for_Tegra.tar.zst -C $GITHUB_WORKSPACE Linux_for_Tegra
-
-  #   - name: List all files in $GITHUB_WORKSPACE
-  #     run: ls -lah "$GITHUB_WORKSPACE"
+    - name: Download and extract L4T Driver Package & Sample Root filesystem
+      if: steps.cache-bsp.outputs.cache-hit != 'true'
+      run: |
+        echo "Downloading L4T Driver Package (BSP)..."
+        wget -q -O Jetson_Linux_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Jetson_Linux_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
+        echo "Downloading L4T Sample Root Filesystem..."
+        wget -q -O Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
+        echo "Extracting L4T Driver Package (BSP)..."
+        tar -xjf Jetson_Linux_aarch64.tbz2 -C $GITHUB_WORKSPACE/
+        echo "Extracting L4T Sample Root Filesystem..."
+        sudo tar -xjf Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 -C $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/
+        echo "Compress L4T..."
+        sudo tar --create --preserve-permissions --use-compress-program=zstd -f $GITHUB_WORKSPACE/Linux_for_Tegra.tar.zst -C $GITHUB_WORKSPACE Linux_for_Tegra
 
   build-jetson-image:
-    # runs-on: self-hosted
+    runs-on: self-hosted
     runs-on: ubuntu-22.04
     # needs: cache-jetson-downloads
 
@@ -80,18 +76,6 @@ jobs:
       run: |
         echo 'set man-db/auto-update false' | sudo debconf-communicate >/dev/null
         sudo dpkg-reconfigure man-db
-
-    - name: Maximize build space
-      uses: AdityaGarg8/remove-unwanted-software@v5
-      with:
-        # remove-dotnet: 'true'
-        # remove-android: 'true'
-        # remove-haskell: 'true'
-        # remove-codeql: 'true'
-        remove-docker-images: 'true'
-        remove-large-packages: 'true'
-        remove-cached-tools: 'true'
-        remove-swapfile: 'true'
 
     - name: Free Disk Space
       # uses: jlumbroso/free-disk-space@main
@@ -102,468 +86,259 @@ jobs:
         dotnet: true
         haskell: true
         large-packages: true
-        docker-images: true
+        docker-images: false
         swap-storage: true
-
-    - name: Show runner disk usage before
-      run: |
-        echo "=== Disk usage before cleanup ==="
-        df -h /
 
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # # - name: Set up workspace
-    # #   run: |
-    # #     cd $GITHUB_WORKSPACE
-    # #     mkdir -p ${{ env.DOWNLOADS }}
-
-    # - name: Install dependencies
-    #   run: |
-    #     sudo apt-get update
-    #     sudo apt-get install -y \
-    #       lbzip2 \
-    #       libncurses5-dev \
-    #       libncursesw5-dev \
-    #       libxml2-utils \
-    #       qemu-user-static \
-    #       xmlstarlet
-
-
-    #       # binfmt-support \
-    #       # pigz \
-
-    - name: Show runner disk usage before
+    - name: Install dependencies on host
       run: |
-        echo "=== Disk usage before cleanup ==="
-        df -h /
+        sudo apt-get update
+        sudo apt-get install -y \
+          lbzip2 \
+          libncurses5-dev \
+          libncursesw5-dev \
+          libxml2-utils \
+          qemu-user-static \
+          xmlstarlet
 
-    - name: Remove large directories
+    - name: Set up QEMU for ARM64 emulation
       run: |
-        set -e
-        dirs=(
-            "/usr/local/share/powershell"
-            "/usr/lib/jvm"
-            "/usr/local/julia1.11.6"
-            "/usr/local/aws-cli"
-            "/usr/local/aws-sam-cli"
-            "/usr/local/share/chromium"
-            "/usr/lib/heroku"
-            "/usr/local/share/vcpkg"
-            "/usr/share/swift"
-            "/usr/share/az_12.5.0"
-            "/usr/share/sbt"
-            "/usr/share/gradle-9.0.0"
-            "/usr/lib/modules"
-            "/usr/lib/mono"
-            "/usr/lib/snapd"
-            "/usr/share/kotlinc"
-            "/usr/lib/llvm-14"
-            "/usr/lib/R"
-            "/usr/share/doc"
-            "/usr/lib/llvm-15"
-            "/usr/share/locale"
-            "/usr/lib/llvm-13"
-            "/usr/share/python-babel-localedata"
-            "/usr/share/ri"
-            "/usr/lib/cni"
-            "/usr/share/java"
-            "/usr/lib/postgresql"
-            "/usr/share/icons"
-            "/usr/share/fonts"
-            "/usr/local/share/edge_driver"
-            "/usr/share/man"
-            "/usr/local/share/cmake-3.31"
-            "/usr/share/perl"
-            "/usr/lib/ruby"
-            "/usr/local/share/chromedriver-linux64"
-            "/usr/lib/udev"
-            "/usr/share/i18n"
-            "/usr/lib/linux-azure-6.8-tools-6.8.0-1031"
-            "/usr/lib/git-core"
-            "/usr/share/R"
-            "/usr/lib/systemd"
-            "/usr/share/apache-maven-3.9.11"
-            "/usr/share/miniconda"
-            "/usr/lib/gcc"
-        )
+        sudo update-binfmts --enable qemu-aarch64
+        docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
-        for dir in "${dirs[@]}"; do
-            if [ -d "$dir" ]; then
-                echo "Removing $dir..."
-                sudo rm -rf "$dir"
-                echo "$dir removed."
-            else
-                echo "$dir does not exist. Skipping."
-            fi
-        done
+    - name: Restore Cache L4T BSP and Sample Root FS
+      id: cache-bsp
+      uses: actions/cache@v4
+      with:
+        path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
+        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted
+        fail-on-cache-miss: true
 
-    - name: Remove other applications
+    - name: Extract L4T packages
       run: |
-        sudo apt remove kubectl
-        sudo rm -f /usr/local/bin/oc
-        sudo rm -f /usr/local/bin/minikube
-        sudo rm -f /usr/local/bin/node
-        sudo rm -f /usr/local/bin/stack
-        sudo rm -f /usr/local/bin/terraform
-        sudo rm -f /usr/local/bin/bicep
-        sudo rm -f /usr/local/bin/pulumi
-        sudo rm -f /usr/local/bin/aliyun
-        sudo rm -f /usr/local/bin/helm
-        sudo rm -f /usr/local/bin/azcopy
-        sudo rm -f /usr/local/bin/packer
-        sudo rm -f /usr/local/bin/cmake-gui
-        sudo rm -f /usr/local/bin/pulumi-language-go
-        sudo rm -f /usr/local/bin/pulumi-language-yaml
-        sudo rm -f /usr/lib/libmono-llvm.so.0.0.0
-        sudo rm -f /usr/local/bin/pulumi
-        sudo rm -f /usr/local/bin/pulumi-analyzer-policy
-        sudo rm -f /usr/local/bin/pulumi-analyzer-policy-python
-        sudo rm -f /usr/local/bin/pulumi-language-dotnet
-        sudo rm -f /usr/local/bin/pulumi-language-go
-        sudo rm -f /usr/local/bin/pulumi-language-java
-        sudo rm -f /usr/local/bin/pulumi-language-nodejs
-        sudo rm -f /usr/local/bin/pulumi-language-python
-        sudo rm -f /usr/local/bin/pulumi-language-python-exec
-        sudo rm -f /usr/local/bin/pulumi-language-yaml
-        sudo rm -f /usr/local/bin/pulumi-resource-pulumi-nodejs
-        sudo rm -f /usr/local/bin/pulumi-resource-pulumi-python
-        sudo rm -f /usr/local/bin/pulumi-watch
-        sudo rm -f /usr/local/bin/ctest
-        sudo rm -f /usr/local/bin/ccmake
-        sudo rm -f /usr/local/bin/cmake
-        sudo rm -f /usr/local/bin/cpack
-        sudo rm -f /usr/local/bin/kustomize
-        sudo rm -f /usr/local/bin/kind
-        sudo rm -f /usr/local/bin/oras
+        cd $GITHUB_WORKSPACE
 
-    - name: Show runner disk usage after
+        echo "Extracting L4T Driver Package..."
+        sudo tar --extract --same-permissions --use-compress-program=zstd -f ${{ github.workspace }}/Linux_for_Tegra.tar.zst
+        echo "Remove cache file..."
+        rm ${{ github.workspace }}/Linux_for_Tegra.tar.zst
+
+    - name: Apply NVIDIA proprietary binaries
       run: |
-        echo "=== Disk usage after cleanup ==="
-        df -h /
+        echo "Applying NVIDIA L4T binaries..."
+        sudo $GITHUB_WORKSPACE/Linux_for_Tegra/apply_binaries.sh
+        sudo sed -i 's|<SOC>|t234|g' $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/apt/sources.list.d/nvidia-l4t-apt-source.list
 
-    # - name: Remove large files
-    #   run: |
-    #     set -e
-    #     files=(
-    #         "/usr/local/bin/minikube"
-    #         "/usr/local/bin/oc"
-    #         "/usr/local/bin/node"
-    #         "/usr/local/bin/npm"
-    #         "/usr/local/bin/stack"
-    #         "/usr/local/bin/terraform"
+        # Verify the script completed successfully
+        if [ $? -eq 0 ]; then
+          echo "✅ NVIDIA binaries applied successfully"
+        else
+          echo "❌ Failed to apply NVIDIA binaries"
+          exit 1
+        fi
 
-    #     )
-
-    #     for file in "${files[@]}"; do
-    #         if [ -d "$file" ]; then
-    #             echo "Removing $file..."
-    #             sudo rm -f "$file"
-    #             echo "$file removed."
-    #         else
-    #             echo "$file does not exist. Skipping."
-    #         fi
-    #     done
-
-    - name: Show runner disk usage after
+    - name: Add custom packages to rootfs
       run: |
-        echo "=== Disk usage after cleanup ==="
-        df -h /
+        cd $GITHUB_WORKSPACE/Linux_for_Tegra
 
-    - name: Check disk space
+        if [ -f "${{ github.workspace }}/scripts/install_packages.sh" ]; then
+          # Install additional packages in rootfs using chroot
+          echo "Setting up chroot environment..."
+          sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
+
+          # Mount necessary filesystems for chroot
+          sudo mount --bind /dev rootfs/dev/
+          sudo mount --bind /sys rootfs/sys/
+          sudo mount --bind /proc rootfs/proc/
+          sudo mount --bind /dev/pts rootfs/dev/pts/
+
+          # Copy resolv.conf for network access in chroot
+          sudo cp /etc/resolv.conf rootfs/etc/resolv.conf.bak
+          sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
+
+          # Copy script to install packages in chroot
+          echo "Copying install_packages.sh file from scripts..."
+          cp ${{ github.workspace }}/scripts/install_packages.sh install_packages.sh
+
+          # Make script executable and run it in chroot
+          chmod +x install_packages.sh
+          sudo cp install_packages.sh rootfs/tmp/
+          sudo chroot rootfs /tmp/install_packages.sh
+
+          # Clean up chroot
+          sudo rm rootfs/tmp/install_packages.sh
+          sudo rm rootfs/etc/resolv.conf
+          sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
+
+          # Unmount filesystems
+          sudo umount rootfs/dev/pts/ || true
+          sudo umount rootfs/dev/ || true
+          sudo umount rootfs/sys/ || true
+          sudo umount rootfs/proc/ || true
+        fi
+
+    - name: Create default user
       run: |
-        sudo du -sh /var/lib/docker/overlay2
-        sudo du -sh /usr/local/bin/* 2>/dev/null
-        sudo du -sh /usr/local/share/* 2>/dev/null
-        sudo du -sh /usr/lib/* 2>/dev/null
-        sudo du -sh /usr/share/* 2>/dev/null
-        sudo du -sh /usr/bin/* 2>/dev/null
+        echo "Creating default user..."
+        sudo $GITHUB_WORKSPACE/Linux_for_Tegra/tools/l4t_create_default_user.sh \
+          -u ${{ env.OEM_USER }} \
+          -p jetson \
+          -a \
+          -n jetson_sbc \
+          --accept-license
 
-  #   - name: Set up QEMU for ARM64 emulation
-  #     run: |
-  #       sudo update-binfmts --enable qemu-aarch64
-  #       docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    - name: Copy custom files to rootfs
+      run: |
+        cd $GITHUB_WORKSPACE/Linux_for_Tegra
 
-  #   - name: Restore Cache L4T BSP and Sample Root FS
-  #     id: cache-bsp
-  #     uses: actions/cache@v4
-  #     with:
-  #       path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
-  #       key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted
-  #       fail-on-cache-miss: true
+        # Copy any custom files from repository to rootfs
+        if [ -d "${{ github.workspace }}/rootfs-overlay" ]; then
+          echo "Copying custom files from rootfs-overlay..."
+          sudo cp -r ${{ github.workspace }}/rootfs-overlay/* rootfs/
+        fi
 
-  #   - name: List all files in $GITHUB_WORKSPACE
-  #     run: ls -lah "$GITHUB_WORKSPACE"
+        # sudo chmod +x rootfs/opt/custom/custom_startup.sh
 
-  #   - name: Extract L4T packages
-  #     run: |
-  #       cd $GITHUB_WORKSPACE
+        # sudo chroot rootfs systemctl enable jetson-custom-init.service
 
-  #       echo "Extracting L4T Driver Package..."
-  #       sudo tar --extract --same-permissions --use-compress-program=zstd -f ${{ github.workspace }}/Linux_for_Tegra.tar.zst
-  # #       tar -xf ${{ env.DOWNLOADS }}/Jetson_Linux_aarch64.tbz2
+    - name: Patch jetson-disk-image-creator.sh for NVME support
+      run: |
+        sed -i '/"USB" | "usb")/,/\*/c\
+        			"USB" | "usb")\
+        				rootfs_dev="sda1"\
+        				;;\
+        			"NVME" | "nvme")\
+        				rootfs_dev="nvme0n1p1"\
+        				;;\
+        			*)' $GITHUB_WORKSPACE/Linux_for_Tegra/tools/jetson-disk-image-creator.sh
 
-  # #       echo "Extracting Sample Root Filesystem..."
-  # #       cd Linux_for_Tegra/rootfs/
-  # #       sudo tar -xpf $GITHUB_WORKSPACE/${{ env.DOWNLOADS }}/Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2
+        sed -i 's/Incorrect root filesystem device - Supported devices - SD, USB/\
+            Incorrect root filesystem device - Supported devices - SD, USB, NVME/g' $GITHUB_WORKSPACE/Linux_for_Tegra/tools/jetson-disk-image-creator.sh
 
-  #   - name: Apply NVIDIA proprietary binaries
-  #     run: |
-  #       echo "Applying NVIDIA L4T binaries..."
-  #       sudo $GITHUB_WORKSPACE/Linux_for_Tegra/apply_binaries.sh
+    - name: Generate ${{ env.IMAGE_TYPE }} image
+      run: |
+        cd $GITHUB_WORKSPACE/Linux_for_Tegra
 
-  #       # Verify the script completed successfully
-  #       if [ $? -eq 0 ]; then
-  #         echo "✅ NVIDIA binaries applied successfully"
-  #       else
-  #         echo "❌ Failed to apply NVIDIA binaries"
-  #         exit 1
-  #       fi
+        # Determine image name
+        IMAGE_NAME="${{ env.JETSON_TYPE }}"
+        TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+        FULL_IMAGE_NAME="${IMAGE_NAME}_${TIMESTAMP}_${{ env.IMAGE_TYPE }}.img"
 
-  #   - name: Add custom packages to rootfs
-  #     run: |
-  #       cd $GITHUB_WORKSPACE/Linux_for_Tegra
+        echo "Creating ${{ env.IMAGE_TYPE }} image: $FULL_IMAGE_NAME"
 
-  #       if [ -f "${{ github.workspace }}/scripts/install_packages.sh" ]; then
-  #         # Install additional packages in rootfs using chroot
-  #         echo "Setting up chroot environment..."
-  #         sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
+        # Create the ${{ env.IMAGE_TYPE }} image
+        cd tools
+        sudo ./jetson-disk-image-creator.sh \
+          -o "$FULL_IMAGE_NAME" \
+          -b ${{ env.JETSON_TYPE }} \
+          -d ${{ env.IMAGE_TYPE }}
 
-  #         # Mount necessary filesystems for chroot
-  #         sudo mount --bind /dev rootfs/dev/
-  #         sudo mount --bind /sys rootfs/sys/
-  #         sudo mount --bind /proc rootfs/proc/
-  #         sudo mount --bind /dev/pts rootfs/dev/pts/
+        ls -al
 
-  #         # Copy resolv.conf for network access in chroot
-  #         sudo cp /etc/resolv.conf rootfs/etc/resolv.conf.bak
-  #         sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
+        # Move image to workspace root for artifact upload
+        sudo mv "$FULL_IMAGE_NAME" $GITHUB_WORKSPACE/
 
-  #         # Copy script to install packages in chroot
-  #         echo "Copying install_packages.sh file from scripts..."
-  #         cp ${{ github.workspace }}/scripts/install_packages.sh install_packages.sh
+        ls -al
 
-  #         # Make script executable and run it in chroot
-  #         chmod +x install_packages.sh
-  #         sudo cp install_packages.sh rootfs/tmp/
-  #         sudo chroot rootfs /tmp/install_packages.sh
+        # Create checksum
+        cd $GITHUB_WORKSPACE
+        sha256sum "$FULL_IMAGE_NAME" > "$FULL_IMAGE_NAME.sha256"
 
-  #         # Clean up chroot
-  #         sudo rm rootfs/tmp/install_packages.sh
-  #         sudo rm rootfs/etc/resolv.conf
-  #         sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
+        # Create image info file
+        cat > "$FULL_IMAGE_NAME.info" << EOF
+        Jetson Custom ${{ env.IMAGE_TYPE }} Image
+        =====================================
 
-  #         # Unmount filesystems
-  #         sudo umount rootfs/dev/pts/ || true
-  #         sudo umount rootfs/dev/ || true
-  #         sudo umount rootfs/sys/ || true
-  #         sudo umount rootfs/proc/ || true
-  #       fi
+        Build Information:
+        - Build Date: $(date -u)
+        - L4T Version: ${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
+        - GitHub SHA: ${{ github.sha }}
+        - GitHub Ref: ${{ github.ref }}
+        - Workflow: ${{ github.workflow }}
+        - Runner OS: ${{ runner.os }}
 
-  #   - name: Copy custom files to rootfs
-  #     run: |
-  #       cd $GITHUB_WORKSPACE/Linux_for_Tegra
+        Image Details:
+        - Filename: $FULL_IMAGE_NAME
+        - Target Device: ${{ env.JETSON_TYPE }}
+        - Root Filesystem: Ubuntu 22.04 LTS (ARM64)
+        - Default User: jetson / jetson
 
-  #       # Copy any custom files from repository to rootfs
-  #       if [ -d "${{ github.workspace }}/rootfs-overlay" ]; then
-  #         echo "Copying custom files from rootfs-overlay..."
-  #         sudo cp -r ${{ github.workspace }}/rootfs-overlay/* rootfs/
-  #       fi
+        # Custom Packages Included:
+        # - Development tools (git, vim, htop, build-essential, cmake)
+        # - Python 3 with common packages (numpy, opencv-python, flask)
+        # - Node.js and npm
+        # - Docker
+        # - CAN utilities and I2C tools
+        # - Network management tools
 
-  #       # # Create custom startup script
-  #       # sudo mkdir -p rootfs/opt/custom
-  #       # cat > custom_startup.sh << 'EOF'
-  #       # #!/bin/bash
-  #       # # Custom startup script for Jetson Orin Nano
-  #       # echo "Starting custom Jetson Orin Nano initialization..."
+        Usage Instructions:
+        1. Flash to ${{ env.IMAGE_TYPE }} using Raspberry Pi Imager or dd command
+        2. Insert into ${{ env.JETSON_TYPE }}
+        3. Power on and complete initial setup
+        4. Default login: jetson / jetson (change on first login)
 
-  #       # # Enable SSH
-  #       # systemctl enable ssh
-  #       # systemctl start ssh
+        For support and documentation:
+        https://github.com/${{ github.repository }}
+        EOF
 
-  #       # # Set up Docker
-  #       # usermod -aG docker $USER
+        echo "IMAGE_NAME=$FULL_IMAGE_NAME" >> $GITHUB_ENV
 
-  #       # # Custom hardware initialization
-  #       # # Add your custom hardware setup here
+    - name: Compress image for faster upload
+      run: |
+        cd $GITHUB_WORKSPACE
+        echo "Compressing image for upload..."
 
-  #       # echo "Custom initialization completed!"
-  #       # EOF
+        # Compress with pigz
+        pigz -c "${IMAGE_NAME}"
 
-  #       # sudo cp custom_startup.sh rootfs/opt/custom/
-  #       # sudo chmod +x rootfs/opt/custom/custom_startup.sh
+        # Show resulting file size
+        du -h "${IMAGE_NAME}.gz"
 
-  #       # # Add to systemd for automatic execution
-  #       # cat > jetson-custom-init.service << 'EOF'
-  #       # [Unit]
-  #       # Description=Jetson Custom Initialization
-  #       # After=multi-user.target
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: jetson-orin-nano-image-${{ github.run_number }}
+        path: |
+          ${{ env.IMAGE_NAME }}.gz
+          ${{ env.IMAGE_NAME }}.sha256
+          ${{ env.IMAGE_NAME }}.info
+        retention-days: 30
 
-  #       # [Service]
-  #       # Type=oneshot
-  #       # ExecStart=/opt/custom/custom_startup.sh
-  #       # RemainAfterExit=yes
+    - name: Create release on tag
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          ${{ env.IMAGE_NAME }}.gz
+          ${{ env.IMAGE_NAME }}.sha256
+          ${{ env.IMAGE_NAME }}.info
+        body: |
+          ## Jetson ${{ env.IMAGE_TYPE }} Image
 
-  #       # [Install]
-  #       # WantedBy=multi-user.target
-  #       # EOF
+          This release contains a custom ${{ env.IMAGE_TYPE }} image for the NVIDIA ${{ env.JETSON_TYPE }}.
 
-  #       # sudo cp jetson-custom-init.service rootfs/etc/systemd/system/
-  #       # sudo chroot rootfs systemctl enable jetson-custom-init.service
+          ### What's Included
+          - L4T Version: ${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
+          - Ubuntu 22.04 LTS ARM64
+          - Custom development packages
+          - Docker pre-installed
+          - Default user: ${{ env.OEM_USER }}/jetson
 
-  #   - name: Create default user
-  #     run: |
-  #       echo "Creating default user..."
-  #       sudo $GITHUB_WORKSPACE/Linux_for_Tegra/tools/l4t_create_default_user.sh \
-  #         -u jetson \
-  #         -p jetson \
-  #         -a \
-  #         -n ${{ env.JETSON_TYPE }} \
-  #         --accept-license
+          ### Installation
+          1. Download the `.img.gz` file
+          2. Extract using: `xz -d filename.img.gz`
+          3. Flash to ${{ env.IMAGE_TYPE }} using Raspberry Pi Imager or dd
+          4. insert memory into your Jetson
+          5. Boot your ${{ env.JETSON_TYPE }}
 
-  #   - name: Patch jetson-disk-image-creator.sh for NVME support
-  #     run: |
-  #       sed -i '/"USB" | "usb")/,/\*/c\
-  #       			"USB" | "usb")\
-  #       				rootfs_dev="sda1"\
-  #       				;;\
-  #       			"NVME" | "nvme")\
-  #       				rootfs_dev="nvme0n1p1"\
-  #       				;;\
-  #       			*)' $GITHUB_WORKSPACE/Linux_for_Tegra/tools/jetson-disk-image-creator.sh
+          ### Files
+          - `*.img.gz` - Compressed ${{ env.IMAGE_TYPE }} image
+          - `*.sha256` - Checksum for verification
+          - `*.info` - Build and usage information
 
-  #       sed -i 's/Incorrect root filesystem device - Supported devices - SD, USB/\
-  #           Incorrect root filesystem device - Supported devices - SD, USB, NVME/g' $GITHUB_WORKSPACE/Linux_for_Tegra/tools/jetson-disk-image-creator.sh
-
-  #   - name: Generate ${{ env.IMAGE_TYPE }} image
-  #     run: |
-  #       cd $GITHUB_WORKSPACE/Linux_for_Tegra
-
-  #       # Determine image name
-  #       IMAGE_NAME="${{ env.JETSON_TYPE }}"
-  #       TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-  #       FULL_IMAGE_NAME="${IMAGE_NAME}_${TIMESTAMP}_${{ env.IMAGE_TYPE }}.img"
-
-  #       echo "Creating ${{ env.IMAGE_TYPE }} image: $FULL_IMAGE_NAME"
-
-  #       # Create the ${{ env.IMAGE_TYPE }} image
-  #       cd tools
-  #       sudo ./jetson-disk-image-creator.sh \
-  #         -o "$FULL_IMAGE_NAME" \
-  #         -b ${{ env.JETSON_TYPE }} \
-  #         -d ${{ env.IMAGE_TYPE }}
-
-  #       ls -al
-
-  #       # Move image to workspace root for artifact upload
-  #       sudo mv "$FULL_IMAGE_NAME" $GITHUB_WORKSPACE/
-
-  #       ls -al
-
-  #       # Create checksum
-  #       cd $GITHUB_WORKSPACE
-  #       sha256sum "$FULL_IMAGE_NAME" > "$FULL_IMAGE_NAME.sha256"
-
-  #       # Create image info file
-  #       cat > "$FULL_IMAGE_NAME.info" << EOF
-  #       Jetson Custom ${{ env.IMAGE_TYPE }} Image
-  #       =====================================
-
-  #       Build Information:
-  #       - Build Date: $(date -u)
-  #       - L4T Version: ${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
-  #       - GitHub SHA: ${{ github.sha }}
-  #       - GitHub Ref: ${{ github.ref }}
-  #       - Workflow: ${{ github.workflow }}
-  #       - Runner OS: ${{ runner.os }}
-
-  #       Image Details:
-  #       - Filename: $FULL_IMAGE_NAME
-  #       - Target Device: ${{ env.JETSON_TYPE }}
-  #       - Root Filesystem: Ubuntu 22.04 LTS (ARM64)
-  #       - Default User: jetson / jetson
-
-  #       # Custom Packages Included:
-  #       # - Development tools (git, vim, htop, build-essential, cmake)
-  #       # - Python 3 with common packages (numpy, opencv-python, flask)
-  #       # - Node.js and npm
-  #       # - Docker
-  #       # - CAN utilities and I2C tools
-  #       # - Network management tools
-
-  #       Usage Instructions:
-  #       1. Flash to ${{ env.IMAGE_TYPE }} using Raspberry Pi Imager or dd command
-  #       2. Insert into ${{ env.JETSON_TYPE }}
-  #       3. Power on and complete initial setup
-  #       4. Default login: jetson / jetson (change on first login)
-
-  #       For support and documentation:
-  #       https://github.com/${{ github.repository }}
-  #       EOF
-
-  #       echo "IMAGE_NAME=$FULL_IMAGE_NAME" >> $GITHUB_ENV
-
-  #   - name: Compress image for faster upload
-  #     run: |
-  #       cd $GITHUB_WORKSPACE
-  #       echo "Compressing image for upload..."
-  #       pigz "${IMAGE_NAME}"
-  #       ls -lht "${IMAGE_NAME}.gz"
-
-  #   # - name: output to folder on Self Hosted runner
-  #   #   run: |
-  #   #     cd $GITHUB_WORKSPACE
-  #   #     cp "${IMAGE_NAME}" /output
-
-  #   - name: Upload build artifacts
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       name: jetson-orin-nano-image-${{ github.run_number }}
-  #       path: |
-  #         ${{ env.IMAGE_NAME }}.gz
-  #         ${{ env.IMAGE_NAME }}.sha256
-  #         ${{ env.IMAGE_NAME }}.info
-  #       retention-days: 30
-
-  #   - name: Create release on tag
-  #     if: startsWith(github.ref, 'refs/tags/')
-  #     uses: softprops/action-gh-release@v1
-  #     with:
-  #       files: |
-  #         ${{ env.IMAGE_NAME }}.gz
-  #         ${{ env.IMAGE_NAME }}.sha256
-  #         ${{ env.IMAGE_NAME }}.info
-  #       body: |
-  #         ## Jetson ${{ env.IMAGE_TYPE }} Image
-
-  #         This release contains a custom ${{ env.IMAGE_TYPE }} image for the NVIDIA ${{ env.JETSON_TYPE }}.
-
-  #         ### What's Included
-  #         - L4T Version: ${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
-  #         - Ubuntu 22.04 LTS ARM64
-  #         - Custom development packages
-  #         - Docker pre-installed
-  #         - Default user: jetson/jetson
-
-  #         ### Installation
-  #         1. Download the `.img.gz` file
-  #         2. Extract using: `xz -d filename.img.gz`
-  #         3. Flash to ${{ env.IMAGE_TYPE }} using balenaEtcher or dd
-  #         4. insert memory into your Jetson
-  #         5. Boot your ${{ env.JETSON_TYPE }}
-
-  #         ### Files
-  #         - `*.img.gz` - Compressed ${{ env.IMAGE_TYPE }} image
-  #         - `*.sha256` - Checksum for verification
-  #         - `*.info` - Build and usage information
-
-  #       draft: false
-  #       prerelease: false
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  #   # - name: Cleanup workspace
-  #   #   if: always()
-  #   #   run: |
-  #   #     cd /
-  #   #     sudo rm -rf $GITHUB_WORKSPACE || true
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
