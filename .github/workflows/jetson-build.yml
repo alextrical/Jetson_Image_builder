@@ -168,8 +168,8 @@ jobs:
           sudo chroot rootfs /tmp/install_packages.sh
 
           # Clean up chroot
-          sudo rm rootfs/tmp/install_packages.sh
-          sudo rm rootfs/etc/resolv.conf
+          sudo rm -f rootfs/tmp/install_packages.sh
+          sudo rm -f rootfs/etc/resolv.conf
           sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
 
           # Unmount filesystems
