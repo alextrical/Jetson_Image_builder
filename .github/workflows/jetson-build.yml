@@ -1,4 +1,4 @@
-name: Build Jetson Orin Nano Disk Image - Self Hosted
+name: Build Jetson Orin Nano Disk Image
 
 on:
   release:
