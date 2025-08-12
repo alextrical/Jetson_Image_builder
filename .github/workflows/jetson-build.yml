@@ -2,6 +2,7 @@ name: Build Jetson Orin Nano Disk Image
 
 on:
   release:
+    types: [published]
   push:
     branches: [ main, master, selfhosted ]
     tags: [ 'v*' ]
