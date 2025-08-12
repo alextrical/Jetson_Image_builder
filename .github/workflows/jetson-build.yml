@@ -1,6 +1,7 @@
 name: Build Jetson Orin Nano Disk Image - Self Hosted
 
 on:
+  release:
   push:
     branches: [ main, master, selfhosted ]
     tags: [ 'v*' ]
@@ -304,7 +305,7 @@ jobs:
 
     - name: Create release on tag
       uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
+      if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'release'
       with:
         files: |
           ${{ env.IMAGE_NAME }}.gz
