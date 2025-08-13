@@ -4,7 +4,7 @@ on:
   release:
     types: [published]
   push:
-    branches: [ main, master, selfhosted ]
+    branches: [ main, master, selfhosted, Build-RootFS-from-Ubuntu-Base ]
     tags: [ 'v*' ]
   pull_request:
     branches: [ main, master ]
