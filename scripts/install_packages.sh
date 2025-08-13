@@ -29,13 +29,7 @@ apt-get purge -y \
   printer* \
   thunderbird \
   mono* \
-  ubuntu-desktop \
-  ubuntu-desktop-minimal \
   cups \
-  pipewire-bin \
-  modemmanager \
-  xdg-dbus-proxy \
-  snapd \
   firefox \
   gdm3 \
   gnome-control-center \
@@ -47,9 +41,6 @@ apt-get purge -y \
   gnome-mines \
   gnome-sudoku \
   ubiquity \
-  x11-common \
-  ubuntu-desktop \
-  ubuntu-desktop-minimal \
   --auto-remove \
    2>&1 | grep -v "is not installed, so not removed"
 
