@@ -130,18 +130,18 @@ jobs:
         sed -i '/^show_eula[[:space:]]*/ s/^show_eula/#show_eula/' ${{ github.workspace }}/Linux_for_Tegra/tools/l4t_create_default_user.sh
         sed -i 's|sudo tar --numeric-owner -jcpf "${output_samplefs}" *|sudo mv ${output_samplefs} ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-nano-aarch64-packages |g' ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh
 
-    # - name: Copy files
-    #   run: |
-    #     #Copy package list for RootFS
-    #     cp samplefs/nvubuntu-jammy-nano-aarch64-packages ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-nano-aarch64-packages
+    - name: Copy files
+      run: |
+        #Copy package list for RootFS
+        cp samplefs/nvubuntu-jammy-nano-aarch64-packages ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-nano-aarch64-packages
 
     - name: Create Ubuntu RootFS
       run: |
         sudo ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh --abi aarch64 --distro ubuntu --flavor nano --version jammy
 
-    - name: Extract Ubuntu RootFS
-      run: |
-        sudo tar -xvjf ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/sample_fs.tbz2 -C ${{ github.workspace }}/Linux_for_Tegra/rootfs
+    # - name: Extract Ubuntu RootFS
+    #   run: |
+    #     sudo tar -xvjf ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/sample_fs.tbz2 -C ${{ github.workspace }}/Linux_for_Tegra/rootfs
 
     # - name: Apply NVIDIA proprietary binaries
     #   run: |
