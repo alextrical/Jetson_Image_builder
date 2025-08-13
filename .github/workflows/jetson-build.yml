@@ -139,7 +139,7 @@ jobs:
 
     - name: Extract Ubuntu RootFS
       run: |
-        tar -xvjf ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/sample_fs.tbz2 -C ${{ github.workspace }}/Linux_for_Tegra/rootfs
+        sudo tar -xvjf ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/sample_fs.tbz2 -C ${{ github.workspace }}/Linux_for_Tegra/rootfs
 
     - name: Apply NVIDIA proprietary binaries
       run: |
