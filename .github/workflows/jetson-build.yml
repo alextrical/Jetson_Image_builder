@@ -71,7 +71,7 @@ jobs:
   build-jetson-image:
     # runs-on: self-hosted
     runs-on: ubuntu-22.04
-    # needs: cache-jetson-downloads
+    needs: cache-jetson-downloads
 
     steps:
     - name: Disable man-db to make package install and removal faster
@@ -157,7 +157,7 @@ jobs:
           sudo mount --bind /dev/pts rootfs/dev/pts/
 
           # Copy resolv.conf for network access in chroot
-          sudo cp /etc/resolv.conf rootfs/etc/resolv.conf.bak
+          sudo mv rootfs/etc/resolv.conf rootfs/etc/resolv.conf.bak
           sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
 
           # Copy script to install packages in chroot
@@ -176,9 +176,9 @@ jobs:
 
           # Unmount filesystems
           sudo umount rootfs/dev/pts/ || true
-          sudo umount rootfs/dev/ || true
-          sudo umount rootfs/sys/ || true
           sudo umount rootfs/proc/ || true
+          sudo umount rootfs/sys/ || true
+          sudo umount rootfs/dev/ || true
         fi
 
     - name: Create default user
@@ -190,6 +190,10 @@ jobs:
           -a \
           -n jetson_sbc \
           --accept-license
+
+    - name: Copy user creation script
+      run: |
+        cp $GITHUB_WORKSPACE/Linux_for_Tegra/tools/l4t_create_default_user.sh $GITHUB_WORKSPACE/l4t_create_default_user.sh
 
     - name: Copy custom files to rootfs
       run: |
@@ -265,21 +269,18 @@ jobs:
         - Filename: $FULL_IMAGE_NAME
         - Target Device: ${{ env.JETSON_TYPE }}
         - Root Filesystem: Ubuntu 22.04 LTS (ARM64)
-        - Default User: jetson / jetson
+        - Default User: ${{ env.OEM_USER }} / jetson
 
-        # Custom Packages Included:
+        Custom Packages Included:
         # - Development tools (git, vim, htop, build-essential, cmake)
-        # - Python 3 with common packages (numpy, opencv-python, flask)
-        # - Node.js and npm
-        # - Docker
-        # - CAN utilities and I2C tools
-        # - Network management tools
+        - Docker
+        - Network management tools
 
         Usage Instructions:
         1. Flash to ${{ env.IMAGE_TYPE }} using Raspberry Pi Imager or dd command
         2. Insert into ${{ env.JETSON_TYPE }}
         3. Power on and complete initial setup
-        4. Default login: jetson / jetson (change on first login)
+        4. Default login: ${{ env.OEM_USER }} / jetson (change on first login)
 
         For support and documentation:
         https://github.com/${{ github.repository }}
@@ -302,6 +303,7 @@ jobs:
           ${{ env.IMAGE_NAME }}.gz
           ${{ env.IMAGE_NAME }}.sha256
           ${{ env.IMAGE_NAME }}.info
+          l4t_create_default_user.sh
         retention-days: 30
 
     - name: Create release on tag
@@ -312,6 +314,7 @@ jobs:
           ${{ env.IMAGE_NAME }}.gz
           ${{ env.IMAGE_NAME }}.sha256
           ${{ env.IMAGE_NAME }}.info
+          l4t_create_default_user.sh
         body: |
           ## Jetson ${{ env.IMAGE_TYPE }} Image
 
