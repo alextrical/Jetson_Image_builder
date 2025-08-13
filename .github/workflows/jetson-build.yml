@@ -196,7 +196,7 @@ jobs:
     #       sudo umount rootfs/dev/ || true
     #     fi
     - name: List all files in folder
-        run: ls -l $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/gdm3/
+      run: ls -l $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/gdm3/
 
     - name: Create default user
       run: |
