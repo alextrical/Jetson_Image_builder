@@ -198,7 +198,7 @@ jobs:
     #     fi
     - name: What is installing gdm3
       run: |
-        aptitude why gdm3 || true
+        sudo chroot GITHUB_WORKSPACE/Linux_for_Tegra/rootFS aptitude why gdm3 || true
 
     - name: Create default user
       run: |
