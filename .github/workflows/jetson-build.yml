@@ -51,7 +51,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
-        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted
+        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-BSP
         lookup-only: true
 
     - name: Download and extract L4T Driver Package & Sample Root filesystem
@@ -59,12 +59,8 @@ jobs:
       run: |
         echo "Downloading L4T Driver Package (BSP)..."
         wget -q -O Jetson_Linux_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Jetson_Linux_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
-        echo "Downloading L4T Sample Root Filesystem..."
-        wget -q -O Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 https://developer.nvidia.com/downloads/embedded/l4t/r${{ env.L4T_MAJOR_VERSION }}_release_v${{ env.L4T_MINOR_VERSION }}/release/Tegra_Linux_Sample-Root-Filesystem_r${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}_aarch64.tbz2
         echo "Extracting L4T Driver Package (BSP)..."
         tar -xjf Jetson_Linux_aarch64.tbz2 -C $GITHUB_WORKSPACE/
-        echo "Extracting L4T Sample Root Filesystem..."
-        sudo tar -xjf Tegra_Linux_Sample-Root-Filesystem_aarch64.tbz2 -C $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/
         echo "Compress L4T..."
         sudo tar --create --preserve-permissions --use-compress-program=zstd -f $GITHUB_WORKSPACE/Linux_for_Tegra.tar.zst -C $GITHUB_WORKSPACE Linux_for_Tegra
 
@@ -74,22 +70,22 @@ jobs:
     needs: cache-jetson-downloads
 
     steps:
-    - name: Disable man-db to make package install and removal faster
-      run: |
-        echo 'set man-db/auto-update false' | sudo debconf-communicate >/dev/null
-        sudo dpkg-reconfigure man-db
+    # - name: Disable man-db to make package install and removal faster
+    #   run: |
+    #     echo 'set man-db/auto-update false' | sudo debconf-communicate >/dev/null
+    #     sudo dpkg-reconfigure man-db
 
-    - name: Free Disk Space
-      # uses: jlumbroso/free-disk-space@main
-      uses: jayllyz/free-disk-space@perf/use-rmz
-      with:
-        tool-cache: true
-        android: true
-        dotnet: true
-        haskell: true
-        large-packages: true
-        docker-images: false
-        swap-storage: true
+    # - name: Free Disk Space
+    #   # uses: jlumbroso/free-disk-space@main
+    #   uses: jayllyz/free-disk-space@perf/use-rmz
+    #   with:
+    #     tool-cache: true
+    #     android: true
+    #     dotnet: true
+    #     haskell: true
+    #     large-packages: true
+    #     docker-images: false
+    #     swap-storage: true
 
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -110,7 +106,7 @@ jobs:
         sudo update-binfmts --enable qemu-aarch64
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
-    - name: Restore Cache L4T BSP and Sample Root FS
+    - name: Restore Cached L4T BSP
       id: cache-bsp
       uses: actions/cache@v4
       with:
@@ -127,6 +123,24 @@ jobs:
         echo "Remove cache file..."
         rm ${{ github.workspace }}/Linux_for_Tegra.tar.zst
 
+    - name: Patch files
+      run: |
+        #Update base image
+        sed -i 's|https://cdimage.ubuntu.com/ubuntu-base/releases/22.04/release/ubuntu-base-22.04.2-base-arm64.tar.gz|https://cdimage.ubuntu.com/ubuntu-base/releases/22.04/release/ubuntu-base-22.04.5-base-arm64.tar.gz|g' ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-aarch64-samplefs
+
+    - name: Copy files
+      run: |
+        #Copy package list for RootFS
+        cp samplefs/nvubuntu-jammy-nano-aarch64-packages ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-nano-aarch64-packages
+
+    - name: Create Ubuntu RootFS
+      run: |
+        sudo ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh --abi aarch64 --distro ubuntu --flavor nano --version jammy
+
+    - name: Extract Ubuntu RootFS
+      run: |
+        tar -xvjf ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/sample_fs.tbz2 -C ${{ github.workspace }}/Linux_for_Tegra/rootfs
+
     - name: Apply NVIDIA proprietary binaries
       run: |
         echo "Applying NVIDIA L4T binaries..."
@@ -141,73 +155,73 @@ jobs:
           exit 1
         fi
 
-    - name: Add custom packages to rootfs
-      run: |
-        cd $GITHUB_WORKSPACE/Linux_for_Tegra
+    # - name: Add custom packages to rootfs
+    #   run: |
+    #     cd $GITHUB_WORKSPACE/Linux_for_Tegra
 
-        if [ -f "${{ github.workspace }}/scripts/install_packages.sh" ]; then
-          # Install additional packages in rootfs using chroot
-          echo "Setting up chroot environment..."
-          sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
+    #     if [ -f "${{ github.workspace }}/scripts/install_packages.sh" ]; then
+    #       # Install additional packages in rootfs using chroot
+    #       echo "Setting up chroot environment..."
+    #       sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
 
-          # Mount necessary filesystems for chroot
-          sudo mount --bind /dev rootfs/dev/
-          sudo mount --bind /sys rootfs/sys/
-          sudo mount --bind /proc rootfs/proc/
-          sudo mount --bind /dev/pts rootfs/dev/pts/
+    #       # Mount necessary filesystems for chroot
+    #       sudo mount --bind /dev rootfs/dev/
+    #       sudo mount --bind /sys rootfs/sys/
+    #       sudo mount --bind /proc rootfs/proc/
+    #       sudo mount --bind /dev/pts rootfs/dev/pts/
 
-          # Copy resolv.conf for network access in chroot
-          sudo mv rootfs/etc/resolv.conf rootfs/etc/resolv.conf.bak
-          sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
+    #       # Copy resolv.conf for network access in chroot
+    #       sudo mv rootfs/etc/resolv.conf rootfs/etc/resolv.conf.bak
+    #       sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
 
-          # Copy script to install packages in chroot
-          echo "Copying install_packages.sh file from scripts..."
-          cp ${{ github.workspace }}/scripts/install_packages.sh install_packages.sh
+    #       # Copy script to install packages in chroot
+    #       echo "Copying install_packages.sh file from scripts..."
+    #       cp ${{ github.workspace }}/scripts/install_packages.sh install_packages.sh
 
-          # Make script executable and run it in chroot
-          chmod +x install_packages.sh
-          sudo cp install_packages.sh rootfs/tmp/
-          sudo chroot rootfs /tmp/install_packages.sh
+    #       # Make script executable and run it in chroot
+    #       chmod +x install_packages.sh
+    #       sudo cp install_packages.sh rootfs/tmp/
+    #       sudo chroot rootfs /tmp/install_packages.sh
 
-          # Clean up chroot
-          sudo rm -f rootfs/tmp/install_packages.sh
-          sudo rm -f rootfs/etc/resolv.conf
-          sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
+    #       # Clean up chroot
+    #       sudo rm -f rootfs/tmp/install_packages.sh
+    #       sudo rm -f rootfs/etc/resolv.conf
+    #       sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
 
-          # Unmount filesystems
-          sudo umount rootfs/dev/pts/ || true
-          sudo umount rootfs/proc/ || true
-          sudo umount rootfs/sys/ || true
-          sudo umount rootfs/dev/ || true
-        fi
+    #       # Unmount filesystems
+    #       sudo umount rootfs/dev/pts/ || true
+    #       sudo umount rootfs/proc/ || true
+    #       sudo umount rootfs/sys/ || true
+    #       sudo umount rootfs/dev/ || true
+    #     fi
 
-    - name: Create default user
-      run: |
-        echo "Creating default user..."
-        sudo $GITHUB_WORKSPACE/Linux_for_Tegra/tools/l4t_create_default_user.sh \
-          -u ${{ env.OEM_USER }} \
-          -p jetson \
-          -a \
-          -n jetson_sbc \
-          --accept-license
+    # - name: Create default user
+    #   run: |
+    #     echo "Creating default user..."
+    #     sudo $GITHUB_WORKSPACE/Linux_for_Tegra/tools/l4t_create_default_user.sh \
+    #       -u ${{ env.OEM_USER }} \
+    #       -p jetson \
+    #       -a \
+    #       -n jetson_sbc \
+    #       --accept-license
 
     - name: Copy user creation script
       run: |
         cp $GITHUB_WORKSPACE/Linux_for_Tegra/tools/l4t_create_default_user.sh $GITHUB_WORKSPACE/l4t_create_default_user.sh
 
-    - name: Copy custom files to rootfs
-      run: |
-        cd $GITHUB_WORKSPACE/Linux_for_Tegra
+    # - name: Copy custom files to rootfs
+    #   run: |
+    #     cd $GITHUB_WORKSPACE/Linux_for_Tegra
 
-        # Copy any custom files from repository to rootfs
-        if [ -d "${{ github.workspace }}/rootfs-overlay" ]; then
-          echo "Copying custom files from rootfs-overlay..."
-          sudo cp -r ${{ github.workspace }}/rootfs-overlay/* rootfs/
-        fi
+    #     # Copy any custom files from repository to rootfs
+    #     if [ -d "${{ github.workspace }}/rootfs-overlay" ]; then
+    #       echo "Copying custom files from rootfs-overlay..."
+    #       sudo cp -r ${{ github.workspace }}/rootfs-overlay/* rootfs/
+    #     fi
 
-        # sudo chmod +x rootfs/opt/custom/custom_startup.sh
+    #     # sudo chmod +x rootfs/opt/custom/custom_startup.sh
 
-        # sudo chroot rootfs systemctl enable jetson-custom-init.service
+    #     # sudo chroot rootfs systemctl enable jetson-custom-init.service
 
     - name: Patch jetson-disk-image-creator.sh for NVME support
       run: |
