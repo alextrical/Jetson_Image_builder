@@ -205,7 +205,7 @@ jobs:
         echo "Creating etc/nv folder..."
         sudo mkdir -p $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/nv
         echo "Remove readme from rootfs..."
-        rm $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/README.txt
+        sudo rm $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/README.txt
         echo "Creating default user..."
         sudo $GITHUB_WORKSPACE/Linux_for_Tegra/tools/l4t_create_default_user.sh \
           -u ${{ env.OEM_USER }} \
