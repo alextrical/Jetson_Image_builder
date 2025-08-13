@@ -128,6 +128,7 @@ jobs:
         #Update base image
         sed -i 's|https://cdimage.ubuntu.com/ubuntu-base/releases/22.04/release/ubuntu-base-22.04.2-base-arm64.tar.gz|https://cdimage.ubuntu.com/ubuntu-base/releases/22.04/release/ubuntu-base-22.04.5-base-arm64.tar.gz|g' ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-aarch64-samplefs
         sed -i '/^show_eula[[:space:]]*/ s/^show_eula/#show_eula/' ${{ github.workspace }}/Linux_for_Tegra/tools/l4t_create_default_user.sh
+
     - name: Copy files
       run: |
         #Copy package list for RootFS
@@ -194,6 +195,8 @@ jobs:
     #       sudo umount rootfs/sys/ || true
     #       sudo umount rootfs/dev/ || true
     #     fi
+    - name: List all files in folder
+        run: ls -l $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/gdm3/
 
     - name: Create default user
       run: |
