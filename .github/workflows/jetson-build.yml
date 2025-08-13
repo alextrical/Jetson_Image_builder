@@ -198,12 +198,12 @@ jobs:
     #     fi
     - name: What is installing gdm3
       run: |
-        apt-cache rdepends gdm3 || true
+        aptitude why gdm3 || true
 
     - name: Create default user
       run: |
         echo "Creating etc/nv folder..."
-        mkdir -p $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/nv
+        sudo mkdir -p $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/nv
         echo "Remove readme from rootfs..."
         rm $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/README.txt
         echo "Creating default user..."
