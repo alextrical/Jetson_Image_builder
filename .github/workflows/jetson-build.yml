@@ -128,11 +128,12 @@ jobs:
         #Update base image
         sed -i 's|https://cdimage.ubuntu.com/ubuntu-base/releases/22.04/release/ubuntu-base-22.04.2-base-arm64.tar.gz|https://cdimage.ubuntu.com/ubuntu-base/releases/22.04/release/ubuntu-base-22.04.5-base-arm64.tar.gz|g' ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-aarch64-samplefs
         sed -i '/^show_eula[[:space:]]*/ s/^show_eula/#show_eula/' ${{ github.workspace }}/Linux_for_Tegra/tools/l4t_create_default_user.sh
+        sed -i 's|sudo tar --numeric-owner -jcpf "${output_samplefs}" *|sudo mv ${output_samplefs} ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-nano-aarch64-packages |g' ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh
 
-    - name: Copy files
-      run: |
-        #Copy package list for RootFS
-        cp samplefs/nvubuntu-jammy-nano-aarch64-packages ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-nano-aarch64-packages
+    # - name: Copy files
+    #   run: |
+    #     #Copy package list for RootFS
+    #     cp samplefs/nvubuntu-jammy-nano-aarch64-packages ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-nano-aarch64-packages
 
     - name: Create Ubuntu RootFS
       run: |
@@ -196,7 +197,10 @@ jobs:
     #       sudo umount rootfs/dev/ || true
     #     fi
     - name: List all files in folder
-      run: ls -l $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/gdm3/
+      run: |
+        ls -l $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/gdm3/
+        dpkg -l | grep gdm3
+        apt-cache rdepends gdm3
 
     - name: Create default user
       run: |
