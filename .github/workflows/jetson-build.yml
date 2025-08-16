@@ -4,10 +4,10 @@ on:
   release:
     types: [published]
   push:
-    branches: [ main, master, selfhosted, Build-RootFS-from-Ubuntu-Base ]
+    # branches: [ main, master, selfhosted, Build-RootFS-from-Ubuntu-Base ]
     tags: [ 'v*' ]
-  pull_request:
-    branches: [ main, master ]
+  # pull_request:
+  #   branches: [ main, master ]
   workflow_dispatch:
     inputs:
       l4t_major_version:
