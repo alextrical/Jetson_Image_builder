@@ -64,10 +64,28 @@ jobs:
         echo "Compress L4T..."
         sudo tar --create --preserve-permissions --use-compress-program=zstd -f $GITHUB_WORKSPACE/Linux_for_Tegra.tar.zst -C $GITHUB_WORKSPACE Linux_for_Tegra
 
+  create-draft:
+    # runs-on: self-hosted
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      release_id: ${{ steps.create_release.outputs.id }}
+    steps:
+      - name: Create draft
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          draft: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build-jetson-image:
     # runs-on: self-hosted
     runs-on: ubuntu-22.04
-    needs: cache-jetson-downloads
+    needs: [cache-jetson-downloads, create-draft]
 
     steps:
     - name: Disable man-db to make package install and removal faster
@@ -315,29 +333,29 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE
         echo "Compressing image for upload..."
-        pigz "${IMAGE_NAME}"
-        ls -lht "${IMAGE_NAME}.gz"
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: jetson-orin-nano-image-${{ github.run_number }}
-        path: |
-          ${{ env.IMAGE_NAME }}.gz
-          ${{ env.IMAGE_NAME }}.sha256
-          ${{ env.IMAGE_NAME }}.info
-          l4t_create_default_user.sh
-        retention-days: 30
+        # Compress with pigz
+        pigz -c "${IMAGE_NAME}" | \
+            split -b 1950M -d - "${IMAGE_NAME}.gz."
 
-    - name: Create release on tag
+    # - name: Upload build artifacts
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: jetson-orin-nano-image-${{ github.run_number }}
+    #     path: |
+    #       ${{ env.IMAGE_NAME }}.gz
+    #       ${{ env.IMAGE_NAME }}.sha256
+    #       ${{ env.IMAGE_NAME }}.info
+    #       l4t_create_default_user.sh
+    #     retention-days: 30
+
+    - name: Upload Image as Release Asset
+      if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'release'
       with:
         files: |
-          ${{ env.IMAGE_NAME }}.gz
           ${{ env.IMAGE_NAME }}.sha256
           ${{ env.IMAGE_NAME }}.info
-          l4t_create_default_user.sh
         body: |
           ## Jetson ${{ env.IMAGE_TYPE }} Image
 
@@ -366,3 +384,37 @@ jobs:
         prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload All Split Files as Release Assets
+      if: startsWith(github.ref, 'refs/tags/')
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG_NAME: ${{ github.ref_name }}
+        REPO: ${{ github.repository }}
+      run: |
+        for i in $(seq -w 00 99); do
+          FILE="${{ env.IMAGE_NAME }}.gz.${i}"
+          if [ -f "$FILE" ]; then
+            echo "Uploading $FILE..."
+            gh release upload "$TAG_NAME" "$FILE" --repo "$REPO" --clobber
+          else
+            echo "Skipping missing file: $FILE"
+          fi
+        done
+
+    # - name: Cleanup workspace
+    #   if: always()
+    #   run: |
+    #     cd /
+    #     sudo rm -rf $GITHUB_WORKSPACE || true
+
+  publish-release:
+    needs: [create-draft, build-jetson-image]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish draft as release
+        uses: eregon/publish-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ needs.create-draft.outputs.release_id }}
