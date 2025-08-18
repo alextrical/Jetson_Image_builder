@@ -336,7 +336,7 @@ jobs:
 
         # Compress with pigz
         pigz -c "${IMAGE_NAME}" | \
-            split -b 1950M -d - "${IMAGE_NAME}.gz."
+            split -b 400M -d - "${IMAGE_NAME}.gz."
 
     # - name: Upload build artifacts
     #   uses: actions/upload-artifact@v4
