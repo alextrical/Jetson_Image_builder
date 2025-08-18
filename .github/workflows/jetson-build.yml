@@ -35,7 +35,7 @@ env:
   L4T_MINOR_VERSION: "${{ github.event.env.L4T_MINOR_VERSION || '4.4' }}"
   IMAGE_TYPE: "${{ github.event.inputs.image_type || 'NVME' }}"
   JETSON_TYPE: "${{ github.event.inputs.jetson_type || 'jetson-orin-nano-devkit-super' }}"
-  OEM_USER: "jetson"
+  OEM_USER: "nexus"
 
 jobs:
   cache-jetson-downloads:
@@ -218,19 +218,18 @@ jobs:
       run: |
         sudo chroot $GITHUB_WORKSPACE/Linux_for_Tegra/rootFS aptitude why gdm3 || true
 
-    # - name: Create default user
-    #   run: |
-    #     echo "Creating etc/nv folder..."
-    #     sudo mkdir -p $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/nv
-    #     echo "Remove readme from rootfs..."
-    #     sudo rm $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/README.txt
-    #     echo "Creating default user..."
-    #     sudo $GITHUB_WORKSPACE/Linux_for_Tegra/tools/l4t_create_default_user.sh \
-    #       -u ${{ env.OEM_USER }} \
-    #       -p jetson \
-    #       -a \
-    #       -n jetson_sbc \
-    #       --accept-license
+    - name: Create default user
+      run: |
+        echo "Creating etc/nv folder..."
+        sudo mkdir -p $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/nv
+        echo "Remove readme from rootfs..."
+        sudo rm $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/README.txt
+        echo "Creating default user..."
+        sudo $GITHUB_WORKSPACE/Linux_for_Tegra/tools/l4t_create_default_user.sh \
+          -u ${{ env.OEM_USER }} \
+          -p jetson \
+          -n nexus1-basestation \
+          --accept-license
 
     - name: Copy user creation script
       run: |
