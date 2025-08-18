@@ -356,6 +356,7 @@ jobs:
         files: |
           ${{ env.IMAGE_NAME }}.sha256
           ${{ env.IMAGE_NAME }}.info
+          l4t_create_default_user.sh
         body: |
           ## Jetson ${{ env.IMAGE_TYPE }} Image
 
