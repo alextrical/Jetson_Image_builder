@@ -189,13 +189,13 @@ jobs:
         nvidia-l4t-nvsci*.deb \
         nvidia-l4t-oem-config*.deb \
         nvidia-l4t-openwfd*.deb \
-        nvidia-l4t-optee*.deb \
         nvidia-l4t-gbm*.deb \
         nvidia-l4t-jetson-io*.deb \
-        nvidia-l4t-weston*.deb \
+        nvidia-l4t-weston*.deb
 
 
 
+        # nvidia-l4t-optee*.deb \
         # nvidia-l4t-xusb-firmware*.deb
         # nvidia-l4t-init*.deb
         # nvidia-l4t-tools*.deb
