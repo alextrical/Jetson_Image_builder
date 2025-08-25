@@ -141,6 +141,16 @@ jobs:
           exit 1
         fi
 
+    - name: Create default user
+      run: |
+        echo "Creating default user..."
+        sudo $GITHUB_WORKSPACE/Linux_for_Tegra/tools/l4t_create_default_user.sh \
+          -u ${{ env.OEM_USER }} \
+          -p jetson \
+          -a \
+          -n jetson_sbc \
+          --accept-license
+
     - name: Add custom packages to rootfs
       run: |
         cd $GITHUB_WORKSPACE/Linux_for_Tegra
@@ -180,21 +190,9 @@ jobs:
           sudo umount rootfs/sys/ || true
           sudo umount rootfs/dev/ || true
         fi
-
-    - name: Create default user
-      run: |
-        echo "Creating default user..."
-        sudo $GITHUB_WORKSPACE/Linux_for_Tegra/tools/l4t_create_default_user.sh \
-          -u ${{ env.OEM_USER }} \
-          -p jetson \
-          -a \
-          -n jetson_sbc \
-          --accept-license
-
-    - name: Copy user creation script
-      run: |
-        cp $GITHUB_WORKSPACE/Linux_for_Tegra/tools/l4t_create_default_user.sh $GITHUB_WORKSPACE/l4t_create_default_user.sh
-
+      env:
+        OEM_USER: ${{ env.OEM_USER }}
+        
     - name: Copy custom files to rootfs
       run: |
         cd $GITHUB_WORKSPACE/Linux_for_Tegra
