@@ -186,12 +186,15 @@ jobs:
         nvidia-l4t-factory-service*.deb \
         nvidia-l4t-x11*.deb \
         nvidia-l4t-3d-core*.deb \
-        nvidia-l4t-nvsci*.deb \
         nvidia-l4t-oem-config*.deb \
         nvidia-l4t-openwfd*.deb \
         nvidia-l4t-gbm*.deb \
         nvidia-l4t-jetson-io*.deb \
-        nvidia-l4t-weston*.deb
+        nvidia-l4t-weston*.deb \
+        nvidia-l4t-nvsci*.deb \
+        nvidia-l4t-multimedia*.deb \
+        nvidia-l4t-multimedia-utils*.deb
+
 
 
 
@@ -205,8 +208,6 @@ jobs:
         # nvidia-l4t-cuda-utils*.deb
         # nvidia-l4t-firmware*.deb
         # nvidia-l4t-nvpmodel*.deb
-        # nvidia-l4t-multimedia*.deb
-        # nvidia-l4t-multimedia-utils*.deb
         # nvidia-l4t-nvml*.deb
         # nvidia-l4t-nvpmodel-gui-tools*.deb
         # nvidia-l4t-nvfancontrol*.deb
