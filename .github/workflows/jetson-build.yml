@@ -161,6 +161,61 @@ jobs:
     #   run: |
     #     sudo tar -xvjf ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/sample_fs.tbz2 -C ${{ github.workspace }}/Linux_for_Tegra/rootfs
 
+    - name: remove packages we don't wan't to install
+      run: |
+        cd $GITHUB_WORKSPACE/Linux_for_Tegra/nv_tegra/l4t_deb_packages
+        sudo rm -f nvidia-igx-oem-config*.deb
+        nvidia-l4t-libwayland-egl1*.deb
+        nvidia-igx-systemd-reboot-hooks*.deb
+        nvidia-l4t-libwayland-server0*.deb
+        nvidia-l4t-camera*.deb
+        nvidia-l4t-dgpu-x11*.deb
+        nvidia-l4t-jetsonpower-gui-tools*.deb
+        nvidia-l4t-libwayland-client0*.deb
+        nvidia-l4t-dgpu-tools*.deb
+        nvidia-l4t-dgpu-config*.deb
+        nvidia-l4t-dgpu-apt-source*.deb
+        nvidia-l4t-graphics-demos*.deb
+        nvidia-l4t-libwayland-cursor0*.deb
+        nvidia-l4t-vulkan-sc-sdk*.deb
+        nvidia-l4t-wayland*.deb
+        nvidia-l4t-vulkan-sc-dev*.deb
+        nvidia-l4t-vulkan-sc-samples*.deb
+        nvidia-l4t-vulkan-sc*.deb
+        nvidia-l4t-pva*.deb
+        nvidia-l4t-factory-service*.deb
+
+
+
+        nvidia-l4t-x11*.deb
+        nvidia-l4t-3d-core*.deb
+        nvidia-l4t-nvsci*.deb
+        nvidia-l4t-oem-config*.deb
+        nvidia-l4t-openwfd*.deb
+        nvidia-l4t-optee*.deb
+        nvidia-l4t-gbm*.deb
+        nvidia-l4t-jetson-io*.deb
+        nvidia-l4t-weston*.deb
+
+
+
+        # nvidia-l4t-xusb-firmware*.deb
+        # nvidia-l4t-init*.deb
+        # nvidia-l4t-tools*.deb
+        # nvidia-l4t-apt-source*.deb
+        # nvidia-l4t-core*.deb
+        # nvidia-l4t-cuda*.deb
+        # nvidia-l4t-cuda-utils*.deb
+        # nvidia-l4t-firmware*.deb
+        # nvidia-l4t-nvpmodel*.deb
+        # nvidia-l4t-multimedia*.deb
+        # nvidia-l4t-multimedia-utils*.deb
+        # nvidia-l4t-nvml*.deb
+        # nvidia-l4t-nvpmodel-gui-tools*.deb
+        # nvidia-l4t-nvfancontrol*.deb
+        # nvidia-l4t-configs*.deb
+        # nvidia-l4t-initrd*.deb
+
     - name: Apply NVIDIA proprietary binaries
       run: |
         echo "Applying NVIDIA L4T binaries..."

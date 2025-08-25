@@ -79,6 +79,8 @@ libuuid1
 zlib1g
 curl
 wget
+nano
+network-manager
 
 python3-pip
 python3-setuptools
@@ -88,6 +90,3 @@ alsa-utils
 ffmpeg
 ca-certificates
 jq
-openssh-client
-nano
-aptitude
