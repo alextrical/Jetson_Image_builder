@@ -140,6 +140,7 @@ jobs:
         sudo tar --extract --same-permissions --use-compress-program=zstd -f ${{ github.workspace }}/Linux_for_Tegra.tar.zst
         echo "Remove cache file..."
         rm ${{ github.workspace }}/Linux_for_Tegra.tar.zst
+        sudo rm -rf ${{ github.workspace }}/Linux_for_Tegra/rootfs/*
 
     - name: Patch files
       run: |
@@ -194,25 +195,6 @@ jobs:
         nvidia-l4t-nvsci*.deb \
         nvidia-l4t-multimedia*.deb \
         nvidia-l4t-multimedia-utils*.deb
-
-
-
-
-        # nvidia-l4t-optee*.deb \
-        # nvidia-l4t-xusb-firmware*.deb
-        # nvidia-l4t-init*.deb
-        # nvidia-l4t-tools*.deb
-        # nvidia-l4t-apt-source*.deb
-        # nvidia-l4t-core*.deb
-        # nvidia-l4t-cuda*.deb
-        # nvidia-l4t-cuda-utils*.deb
-        # nvidia-l4t-firmware*.deb
-        # nvidia-l4t-nvpmodel*.deb
-        # nvidia-l4t-nvml*.deb
-        # nvidia-l4t-nvpmodel-gui-tools*.deb
-        # nvidia-l4t-nvfancontrol*.deb
-        # nvidia-l4t-configs*.deb
-        # nvidia-l4t-initrd*.deb
 
     - name: Apply NVIDIA proprietary binaries
       run: |
@@ -269,7 +251,7 @@ jobs:
     #     fi
     - name: What is installing gdm3
       run: |
-        sudo chroot $GITHUB_WORKSPACE/Linux_for_Tegra/rootFS aptitude why gdm3 || true
+        sudo chroot $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs aptitude why gdm3 || true
 
     - name: Create default user
       run: |
