@@ -51,7 +51,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
-        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-BSP
+        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-BSP1
         lookup-only: true
 
     - name: Download and extract L4T Driver Package & Sample Root filesystem
@@ -147,7 +147,7 @@ jobs:
         #Update base image
         sed -i 's|https://cdimage.ubuntu.com/ubuntu-base/releases/22.04/release/ubuntu-base-22.04.2-base-arm64.tar.gz|https://cdimage.ubuntu.com/ubuntu-base/releases/22.04/release/ubuntu-base-22.04.5-base-arm64.tar.gz|g' ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-aarch64-samplefs
         # Move rootFS Folder instead of creating tarball
-        sed -i 's|sudo tar --numeric-owner -jcpf "${output_samplefs}" \*|sudo mv ./* '"${{ github.workspace }}"'/Linux_for_Tegra/tools/samplefs|' ./Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh
+        sed -i 's|sudo tar --numeric-owner -jcpf "${output_samplefs}" \*|sudo mv ./* '"${{ github.workspace }}"'/Linux_for_Tegra/rootfs|' ./Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh
 
     - name: Copy files
       run: |
@@ -157,10 +157,6 @@ jobs:
     - name: Create Ubuntu RootFS
       run: |
         sudo ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh --abi aarch64 --distro ubuntu --flavor nano --version jammy
-
-    # - name: Extract Ubuntu RootFS
-    #   run: |
-    #     sudo tar -xvjf ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/sample_fs.tbz2 -C ${{ github.workspace }}/Linux_for_Tegra/rootfs
 
     - name: remove packages we don't wan't to install
       run: |
@@ -194,7 +190,8 @@ jobs:
         nvidia-l4t-weston*.deb \
         nvidia-l4t-nvsci*.deb \
         nvidia-l4t-multimedia*.deb \
-        nvidia-l4t-multimedia-utils*.deb
+        nvidia-l4t-multimedia-utils*.deb \
+        nvidia-l4t-nvpmodel-gui-tools*.deb
 
     - name: Apply NVIDIA proprietary binaries
       run: |
