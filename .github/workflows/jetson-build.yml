@@ -309,12 +309,8 @@ jobs:
           -b ${{ env.JETSON_TYPE }} \
           -d ${{ env.IMAGE_TYPE }}
 
-        ls -al
-
         # Move image to workspace root for artifact upload
         sudo mv "$FULL_IMAGE_NAME" $GITHUB_WORKSPACE/
-
-        ls -al
 
         # Create checksum
         cd $GITHUB_WORKSPACE
