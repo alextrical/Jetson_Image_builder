@@ -54,10 +54,6 @@ libpam-runtime
 ncurses-base
 ncurses-bin
 
-docker.io
-containerd
-runc
-
 lsb-base
 lsb-release
 debconf
