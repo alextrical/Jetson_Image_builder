@@ -161,11 +161,10 @@ jobs:
         mkdir -p $RUNNER_TEMP/etc/apt/sources.list.d
         chmod 0755 $RUNNER_TEMP/etc/apt/keyrings
         chmod 0755 $RUNNER_TEMP/etc/apt/sources.list.d
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o $RUNNER_TEMP/etc/apt/keyrings/docker.asc
-        chmod a+r $RUNNER_TEMP/etc/apt/keyrings/docker.asc
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o $RUNNER_TEMP/etc/apt/keyrings/docker-archive-keyring.gpg
         echo \
-          "deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu jammy stable" | \
-          sudo tee $RUNNER_TEMP/etc/apt/sources.list.d/docker.list > /dev/null
+          "deb [arch=arm64 signed-by=/etc/apt/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu jammy stable" | \
+          sudo tee $RUNNER_TEMP/etc/apt/sources.list.d/docker.list
         tar -rvf ubuntu-base-22.04-base-arm64.tar -C $RUNNER_TEMP etc/apt
         pigz ubuntu-base-22.04-base-arm64.tar
         rm -rf $RUNNER_TEMP/etc/apt
