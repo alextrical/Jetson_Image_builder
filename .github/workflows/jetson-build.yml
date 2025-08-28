@@ -192,20 +192,6 @@ jobs:
         nvidia-l4t-multimedia-utils*.deb \
         nvidia-l4t-nvpmodel-gui-tools*.deb
 
-    - name: Apply NVIDIA proprietary binaries
-      run: |
-        echo "Applying NVIDIA L4T binaries..."
-        sudo $GITHUB_WORKSPACE/Linux_for_Tegra/apply_binaries.sh
-        sudo sed -i 's|<SOC>|t234|g' $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/apt/sources.list.d/nvidia-l4t-apt-source.list
-
-        # Verify the script completed successfully
-        if [ $? -eq 0 ]; then
-          echo "✅ NVIDIA binaries applied successfully"
-        else
-          echo "❌ Failed to apply NVIDIA binaries"
-          exit 1
-        fi
-
     - name: Add docker packages to rootfs
       run: |
         cd $GITHUB_WORKSPACE/Linux_for_Tegra
@@ -220,8 +206,8 @@ jobs:
         # sudo mount --bind /sys rootfs/sys/
         # sudo mount --bind /proc rootfs/proc/
         # sudo mount --bind /dev/pts rootfs/dev/pts/
-        mknod -m 444 "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/dev/random" c 1 8
-        mknod -m 444 "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/dev/urandom" c 1 9
+        sudo mknod -m 444 "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/dev/random" c 1 8
+        sudo mknod -m 444 "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/dev/urandom" c 1 9
 
         pushd "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs"
         touch "/opt/nvidia/l4t-packages/.nv-l4t-disable-boot-fw-update-in-preinstall"
@@ -235,8 +221,8 @@ jobs:
         echo "Removing QEMU binary from rootfs"
         rm -f "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/usr/bin/qemu-aarch64-static"
 
-        rm -f "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/dev/random"
-        rm -f "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/dev/urandom"
+        sudo rm -f "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/dev/random"
+        sudo rm -f "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/dev/urandom"
 
         echo "Removing stashed Debian packages from rootfs"
         rm -rf "${L4T_ROOTFS_DEB_DIR}"
@@ -267,6 +253,20 @@ jobs:
     #       sudo umount rootfs/sys/ || true
     #       sudo umount rootfs/dev/ || true
         # fi
+
+    - name: Apply NVIDIA proprietary binaries
+      run: |
+        echo "Applying NVIDIA L4T binaries..."
+        sudo $GITHUB_WORKSPACE/Linux_for_Tegra/apply_binaries.sh
+        sudo sed -i 's|<SOC>|t234|g' $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/apt/sources.list.d/nvidia-l4t-apt-source.list
+
+        # Verify the script completed successfully
+        if [ $? -eq 0 ]; then
+          echo "✅ NVIDIA binaries applied successfully"
+        else
+          echo "❌ Failed to apply NVIDIA binaries"
+          exit 1
+        fi
 
     - name: Create default user
       run: |
