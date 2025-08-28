@@ -173,7 +173,7 @@ jobs:
     - name: Create Ubuntu RootFS
       run: |
         sudo rm -rf ${{ github.workspace }}/Linux_for_Tegra/rootfs/*
-        sed -i 's|source_samplefs=""|source_samplefs="${{ github.workspace }}/ubuntu-base-22.04-base-arm64.tar"|' "${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh"
+        sed -i 's|source_samplefs=""|source_samplefs="${{ github.workspace }}/ubuntu-base-22.04-base-arm64.tar.gz"|' "${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh"
         sudo ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh --abi aarch64 --distro ubuntu --flavor nano --version jammy
 
     - name: remove packages we don't wan't to install
