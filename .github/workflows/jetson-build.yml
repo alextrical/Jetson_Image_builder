@@ -196,18 +196,19 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/Linux_for_Tegra
 
-        # if [ -f "${{ github.workspace }}/scripts/install_packages.sh" ]; then
         # Install additional packages in rootfs using chroot
         echo "Setting up chroot environment..."
         sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
 
         # Mount necessary filesystems for chroot
-        # sudo mount --bind /dev rootfs/dev/
-        # sudo mount --bind /sys rootfs/sys/
-        # sudo mount --bind /proc rootfs/proc/
-        # sudo mount --bind /dev/pts rootfs/dev/pts/
-        sudo mknod -m 444 "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/dev/random" c 1 8
-        sudo mknod -m 444 "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/dev/urandom" c 1 9
+        sudo mount --bind /dev rootfs/dev/
+        sudo mount --bind /sys rootfs/sys/
+        sudo mount --bind /proc rootfs/proc/
+        sudo mount --bind /dev/pts rootfs/dev/pts/
+
+        # Copy resolv.conf for network access in chroot
+        sudo mv rootfs/etc/resolv.conf rootfs/etc/resolv.conf.bak
+        sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
 
         pushd "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs"
         touch "/opt/nvidia/l4t-packages/.nv-l4t-disable-boot-fw-update-in-preinstall"
@@ -221,37 +222,17 @@ jobs:
         echo "Removing QEMU binary from rootfs"
         rm -f "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/usr/bin/qemu-aarch64-static"
 
-        sudo rm -f "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/dev/random"
-        sudo rm -f "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/dev/urandom"
+        echo "Docker package installation completed!"
 
-        echo "Removing stashed Debian packages from rootfs"
-        rm -rf "${L4T_ROOTFS_DEB_DIR}"
+        # Clean up chroot
+        sudo rm -f rootfs/etc/resolv.conf
+        sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
 
-        echo "L4T BSP package installation completed!"
-
-    #       # Copy resolv.conf for network access in chroot
-    #       sudo mv rootfs/etc/resolv.conf rootfs/etc/resolv.conf.bak
-    #       sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
-
-    #       # Copy script to install packages in chroot
-    #       echo "Copying install_packages.sh file from scripts..."
-    #       cp ${{ github.workspace }}/scripts/install_packages.sh install_packages.sh
-
-    #       # Make script executable and run it in chroot
-    #       chmod +x install_packages.sh
-    #       sudo cp install_packages.sh rootfs/tmp/
-    #       sudo chroot rootfs /tmp/install_packages.sh
-
-    #       # Clean up chroot
-    #       sudo rm -f rootfs/tmp/install_packages.sh
-    #       sudo rm -f rootfs/etc/resolv.conf
-    #       sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
-
-    #       # Unmount filesystems
-    #       sudo umount rootfs/dev/pts/ || true
-    #       sudo umount rootfs/proc/ || true
-    #       sudo umount rootfs/sys/ || true
-    #       sudo umount rootfs/dev/ || true
+        # Unmount filesystems
+        sudo umount rootfs/dev/pts/ || true
+        sudo umount rootfs/proc/ || true
+        sudo umount rootfs/sys/ || true
+        sudo umount rootfs/dev/ || true
         # fi
 
     - name: Apply NVIDIA proprietary binaries
