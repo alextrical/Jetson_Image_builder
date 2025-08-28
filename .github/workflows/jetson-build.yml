@@ -226,7 +226,7 @@ jobs:
         popd
 
         echo "Removing QEMU binary from rootfs"
-        rm -f "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/usr/bin/qemu-aarch64-static"
+        sudo rm -f "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/usr/bin/qemu-aarch64-static"
 
         echo "Docker package installation completed!"
 
