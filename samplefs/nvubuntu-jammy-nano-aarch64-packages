@@ -109,3 +109,9 @@ ffmpeg
 ca-certificates
 jq
 net-tools
+
+docker-ce
+docker-ce-cli
+containerd.io
+docker-buildx-plugin
+docker-compose-plugin
