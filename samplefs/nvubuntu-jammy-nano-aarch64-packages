@@ -108,3 +108,4 @@ alsa-utils
 ffmpeg
 ca-certificates
 jq
+net-tools
