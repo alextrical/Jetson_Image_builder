@@ -153,9 +153,27 @@ jobs:
         #Copy package list for RootFS
         cp samplefs/nvubuntu-jammy-nano-aarch64-packages ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-nano-aarch64-packages
 
+    - name: Fetch Ubuntu Base image
+      run: |
+        wget https://cdimage.ubuntu.com/ubuntu-base/releases/22.04/release/ubuntu-base-22.04.5-base-arm64.tar.gz -O ubuntu-base-22.04-base-arm64.tar.gz
+        pigz -d ubuntu-base-22.04-base-arm64.tar.gz
+        mkdir -p $RUNNER_TEMP/etc/apt/keyrings
+        mkdir -p $RUNNER_TEMP/etc/apt/sources.list.d
+        chmod 0755 $RUNNER_TEMP/etc/apt/keyrings
+        chmod 0755 $RUNNER_TEMP/etc/apt/sources.list.d
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o $RUNNER_TEMP/etc/apt/keyrings/docker.asc
+        chmod a+r $RUNNER_TEMP/etc/apt/keyrings/docker.asc
+        echo \
+          "deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu jammy stable" | \
+          sudo tee $RUNNER_TEMP/etc/apt/sources.list.d/docker.list > /dev/null
+        tar -rvf ubuntu-base-22.04-base-arm64.tar -C $RUNNER_TEMP etc/apt
+        pigz ubuntu-base-22.04-base-arm64.tar
+        rm -rf $RUNNER_TEMP/etc/apt
+
     - name: Create Ubuntu RootFS
       run: |
         sudo rm -rf ${{ github.workspace }}/Linux_for_Tegra/rootfs/*
+        sed -i 's|source_samplefs=""|source_samplefs="${{ github.workspace }}/ubuntu-base-22.04-base-arm64.tar"|' "${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh"
         sudo ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh --abi aarch64 --distro ubuntu --flavor nano --version jammy
 
     - name: remove packages we don't wan't to install
