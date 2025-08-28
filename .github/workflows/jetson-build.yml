@@ -144,7 +144,7 @@ jobs:
     - name: Patch files
       run: |
         #Update base image
-        sed -i 's|https://cdimage.ubuntu.com/ubuntu-base/releases/22.04/release/ubuntu-base-22.04.2-base-arm64.tar.gz|https://cdimage.ubuntu.com/ubuntu-base/releases/22.04/release/ubuntu-base-22.04.5-base-arm64.tar.gz|g' ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-aarch64-samplefs
+        sed -i 's|ubuntu-base-22.04.2-base-arm64.tar.gz|ubuntu-base-22.04.5-base-arm64.tar.gz|g' ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-aarch64-samplefs
         # Move rootFS Folder instead of creating tarball
         sed -i 's|sudo tar --numeric-owner -jcpf "${output_samplefs}" \*|sudo mv ./* '"${{ github.workspace }}"'/Linux_for_Tegra/rootfs|' ./Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh
 
@@ -153,30 +153,13 @@ jobs:
         #Copy package list for RootFS
         cp samplefs/nvubuntu-jammy-nano-aarch64-packages ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-nano-aarch64-packages
 
-    - name: Fetch Ubuntu Base image
-      run: |
-        wget https://cdimage.ubuntu.com/ubuntu-base/releases/22.04/release/ubuntu-base-22.04.5-base-arm64.tar.gz -O ubuntu-base-22.04-base-arm64.tar.gz
-        pigz -d ubuntu-base-22.04-base-arm64.tar.gz
-        mkdir -p $RUNNER_TEMP/etc/apt/keyrings
-        mkdir -p $RUNNER_TEMP/etc/apt/sources.list.d
-        chmod 0755 $RUNNER_TEMP/etc/apt/keyrings
-        chmod 0755 $RUNNER_TEMP/etc/apt/sources.list.d
-        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o $RUNNER_TEMP/etc/apt/keyrings/docker.asc
-        sudo chmod a+r $RUNNER_TEMP/etc/apt/keyrings/docker.asc
-        echo \
-          "deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu jammy stable" | \
-          sudo tee $RUNNER_TEMP/etc/apt/sources.list.d/docker.list > /dev/null
-        tar -rvf ubuntu-base-22.04-base-arm64.tar -C $RUNNER_TEMP etc/apt
-        pigz ubuntu-base-22.04-base-arm64.tar
-        rm -rf $RUNNER_TEMP/etc/apt
 
     - name: Create Ubuntu RootFS
       run: |
         sudo rm -rf ${{ github.workspace }}/Linux_for_Tegra/rootfs/*
-        sed -i 's|source_samplefs=""|source_samplefs="${{ github.workspace }}/ubuntu-base-22.04-base-arm64.tar.gz"|' "${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh"
         sudo ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh --abi aarch64 --distro ubuntu --flavor nano --version jammy
 
-    - name: remove packages we don't wan't to install
+    - name: remove packages we don't want to install
       run: |
         cd $GITHUB_WORKSPACE/Linux_for_Tegra/nv_tegra/l4t_deb_packages
         sudo rm -f nvidia-igx-oem-config*.deb \
@@ -223,20 +206,41 @@ jobs:
           exit 1
         fi
 
-    # - name: Add custom packages to rootfs
-    #   run: |
-    #     cd $GITHUB_WORKSPACE/Linux_for_Tegra
+    - name: Add docker packages to rootfs
+      run: |
+        cd $GITHUB_WORKSPACE/Linux_for_Tegra
 
-    #     if [ -f "${{ github.workspace }}/scripts/install_packages.sh" ]; then
-    #       # Install additional packages in rootfs using chroot
-    #       echo "Setting up chroot environment..."
-    #       sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
+        # if [ -f "${{ github.workspace }}/scripts/install_packages.sh" ]; then
+        # Install additional packages in rootfs using chroot
+        echo "Setting up chroot environment..."
+        sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
 
-    #       # Mount necessary filesystems for chroot
-    #       sudo mount --bind /dev rootfs/dev/
-    #       sudo mount --bind /sys rootfs/sys/
-    #       sudo mount --bind /proc rootfs/proc/
-    #       sudo mount --bind /dev/pts rootfs/dev/pts/
+        # Mount necessary filesystems for chroot
+        # sudo mount --bind /dev rootfs/dev/
+        # sudo mount --bind /sys rootfs/sys/
+        # sudo mount --bind /proc rootfs/proc/
+        # sudo mount --bind /dev/pts rootfs/dev/pts/
+        mknod -m 444 "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/dev/random" c 1 8
+        mknod -m 444 "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/dev/urandom" c 1 9
+
+        pushd "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs"
+        touch "/opt/nvidia/l4t-packages/.nv-l4t-disable-boot-fw-update-in-preinstall"
+
+        LC_ALL=C PYTHONHASHSEED=0 chroot . apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+        rm -f "/opt/nvidia/l4t-packages/.nv-l4t-disable-boot-fw-update-in-preinstall"
+        popd
+
+        echo "Removing QEMU binary from rootfs"
+        rm -f "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/usr/bin/qemu-aarch64-static"
+
+        rm -f "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/dev/random"
+        rm -f "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/dev/urandom"
+
+        echo "Removing stashed Debian packages from rootfs"
+        rm -rf "${L4T_ROOTFS_DEB_DIR}"
+
+        echo "L4T BSP package installation completed!"
 
     #       # Copy resolv.conf for network access in chroot
     #       sudo mv rootfs/etc/resolv.conf rootfs/etc/resolv.conf.bak
@@ -261,7 +265,7 @@ jobs:
     #       sudo umount rootfs/proc/ || true
     #       sudo umount rootfs/sys/ || true
     #       sudo umount rootfs/dev/ || true
-    #     fi
+        # fi
 
     - name: Create default user
       run: |
