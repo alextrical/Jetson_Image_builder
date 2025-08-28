@@ -211,12 +211,10 @@ jobs:
         sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
 
         pushd "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs"
-        touch "/opt/nvidia/l4t-packages/.nv-l4t-disable-boot-fw-update-in-preinstall"
 
         LC_ALL=C PYTHONHASHSEED=0 chroot . apt-get update
         LC_ALL=C PYTHONHASHSEED=0 chroot . apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-        rm -f "/opt/nvidia/l4t-packages/.nv-l4t-disable-boot-fw-update-in-preinstall"
         popd
 
         echo "Removing QEMU binary from rootfs"
