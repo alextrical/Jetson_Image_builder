@@ -205,7 +205,6 @@ jobs:
         nvidia-l4t-gbm*.deb \
         nvidia-l4t-jetson-io*.deb \
         nvidia-l4t-weston*.deb \
-        nvidia-l4t-nvsci*.deb \
         nvidia-l4t-multimedia*.deb \
         nvidia-l4t-multimedia-utils*.deb \
         nvidia-l4t-nvpmodel-gui-tools*.deb
