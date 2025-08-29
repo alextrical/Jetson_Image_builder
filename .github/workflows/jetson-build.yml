@@ -243,6 +243,21 @@ jobs:
         sudo umount rootfs/dev/ || true
         # fi
 
+
+    - name: Add docker default runtime
+      run: |
+        cat <<EOF | sudo tee /etc/docker/daemon.json >/dev/null
+          {
+            "runtimes": {
+              "nvidia": {
+                "path": "nvidia-container-runtime",
+                "runtimeArgs": []
+              }
+            },
+            "default-runtime": "nvidia"
+          }
+        EOF
+
     - name: Apply NVIDIA proprietary binaries
       run: |
         echo "Applying NVIDIA L4T binaries..."
@@ -269,6 +284,8 @@ jobs:
           -p jetson \
           -n nexus1-basestation \
           --accept-license
+        sudo usermod -a -G jtop ${{ env.OEM_USER }}
+        sudo usermod -a -G docker ${{ env.OEM_USER }}
 
     - name: Copy user creation script
       run: |
