@@ -212,16 +212,19 @@ jobs:
 
         sudo install -m 0755 -d rootfs/etc/apt/keyrings
         sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o rootfs/etc/apt/keyrings/docker.asc
+        sudo curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey -o rootfs/etc/apt/keyrings/nvidia-container-toolkit.asc
         sudo chmod a+r rootfs/etc/apt/keyrings/docker.asc
         echo \
-          "deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-          jammy stable" | \
+          "deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu jammy stable" | \
           sudo tee rootfs/etc/apt/sources.list.d/docker.list > /dev/null
+        echo \
+          "deb [signed-by=/etc/apt/keyrings/nvidia-container-toolkit.asc] https://nvidia.github.io/libnvidia-container/stable/deb/arm64 /" | \
+          sudo tee rootfs/etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null
 
         pushd "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs"
 
         LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt-get update
-        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin nvidia-container
         LC_ALL=C PYTHONHASHSEED=0 sudo chroot . pip3 install -U "setuptools<71.0.0"
         LC_ALL=C PYTHONHASHSEED=0 sudo chroot . sudo pip3 install -U jetson-stats || true
 
