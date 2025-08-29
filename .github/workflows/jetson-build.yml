@@ -222,6 +222,8 @@ jobs:
 
         LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt-get update
         LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . pip3 install -U "setuptools<71.0.0"
+        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . sudo pip3 install -U jetson-stats || true
 
         popd
 
@@ -368,9 +370,9 @@ jobs:
         echo "Compressing image for upload..."
 
         # Compress with pigz
-        pigz -8 -p $(nproc) "${IMAGE_NAME}"
-        # pigz -c "${IMAGE_NAME}" | \
-        #     split -b 400M -d - "${IMAGE_NAME}.gz."
+        # pigz -8 -p $(nproc) "${IMAGE_NAME}"
+        pigz -c "${IMAGE_NAME}" | \
+            split -b 600M -d - "${IMAGE_NAME}.gz."
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
