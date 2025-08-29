@@ -246,7 +246,7 @@ jobs:
 
     - name: Add docker default runtime
       run: |
-        cat <<EOF | sudo tee /etc/docker/daemon.json >/dev/null
+        cat <<EOF | sudo tee $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/docker/daemon.json >/dev/null
           {
             "runtimes": {
               "nvidia": {
