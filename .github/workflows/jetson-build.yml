@@ -284,6 +284,7 @@ jobs:
           -p jetson \
           -n nexus1-basestation \
           --accept-license
+        sudo groupadd jtop
         sudo usermod -a -G jtop ${{ env.OEM_USER }}
         sudo usermod -a -G docker ${{ env.OEM_USER }}
 
