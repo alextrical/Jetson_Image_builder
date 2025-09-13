@@ -212,7 +212,7 @@ jobs:
         done
 
         # Backup and copy resolv.conf (if present)
-        if [ -f "$CHROOT/etc/resolv.conf" ]; then
+        if [ -L "$CHROOT/etc/resolv.conf" ]; then
           sudo mv "$CHROOT/etc/resolv.conf" "$CHROOT/etc/resolv.conf.bak" || true
         fi
         sudo cp /etc/resolv.conf "$CHROOT/etc/resolv.conf" || true
@@ -271,7 +271,7 @@ jobs:
 
         # restore resolv.conf and cleanup
         sudo rm -f "$CHROOT/etc/resolv.conf"
-        if [ -f "$CHROOT/etc/resolv.conf.bak" ]; then
+        if [ -L "$CHROOT/etc/resolv.conf.bak" ]; then
           sudo mv "$CHROOT/etc/resolv.conf.bak" "$CHROOT/etc/resolv.conf" || true
         fi
 
