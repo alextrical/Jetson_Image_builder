@@ -51,7 +51,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
-        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-BSP1
+        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
         lookup-only: true
 
     - name: Download and extract L4T Driver Package & Sample Root filesystem
@@ -72,6 +72,7 @@ jobs:
       release_id: ${{ steps.create_release.outputs.id }}
     steps:
       - name: Create draft
+        if: startsWith(github.ref, 'refs/tags/')
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
@@ -105,19 +106,20 @@ jobs:
     #     docker-images: false
     #     swap-storage: true
 
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
     - name: Install dependencies on host
       run: |
         sudo apt-get update
         sudo apt-get install -y \
           lbzip2 \
+          ntpdate \
           libncurses5-dev \
           libncursesw5-dev \
           libxml2-utils \
           qemu-user-static \
           xmlstarlet
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
     - name: Set up QEMU for ARM64 emulation
       run: |
@@ -129,13 +131,12 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
-        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}-extracted
+        key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
         fail-on-cache-miss: true
 
     - name: Extract L4T packages
       run: |
         cd $GITHUB_WORKSPACE
-
         echo "Extracting L4T Driver Package..."
         sudo tar --extract --same-permissions --use-compress-program=zstd -f ${{ github.workspace }}/Linux_for_Tegra.tar.zst
         echo "Remove cache file..."
@@ -163,90 +164,126 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/Linux_for_Tegra/nv_tegra/l4t_deb_packages
         sudo rm -f nvidia-igx-oem-config*.deb \
-        nvidia-l4t-libwayland-egl1*.deb \
-        nvidia-igx-systemd-reboot-hooks*.deb \
-        nvidia-l4t-libwayland-server0*.deb \
-        nvidia-l4t-camera*.deb \
-        nvidia-l4t-dgpu-x11*.deb \
-        nvidia-l4t-jetsonpower-gui-tools*.deb \
-        nvidia-l4t-libwayland-client0*.deb \
-        nvidia-l4t-dgpu-tools*.deb \
-        nvidia-l4t-dgpu-config*.deb \
-        nvidia-l4t-dgpu-apt-source*.deb \
-        nvidia-l4t-graphics-demos*.deb \
-        nvidia-l4t-libwayland-cursor0*.deb \
-        nvidia-l4t-vulkan-sc-sdk*.deb \
-        nvidia-l4t-wayland*.deb \
-        nvidia-l4t-vulkan-sc-dev*.deb \
-        nvidia-l4t-vulkan-sc-samples*.deb \
-        nvidia-l4t-vulkan-sc*.deb \
-        nvidia-l4t-pva*.deb \
-        nvidia-l4t-factory-service*.deb \
-        nvidia-l4t-x11*.deb \
-        nvidia-l4t-3d-core*.deb \
-        nvidia-l4t-openwfd*.deb \
-        nvidia-l4t-gbm*.deb \
-        nvidia-l4t-jetson-io*.deb \
-        nvidia-l4t-weston*.deb \
-        nvidia-l4t-multimedia*.deb \
-        nvidia-l4t-multimedia-utils*.deb \
-        nvidia-l4t-nvpmodel-gui-tools*.deb
+          nvidia-l4t-libwayland-egl1*.deb \
+          nvidia-igx-systemd-reboot-hooks*.deb \
+          nvidia-l4t-libwayland-server0*.deb \
+          nvidia-l4t-camera*.deb \
+          nvidia-l4t-dgpu-x11*.deb \
+          nvidia-l4t-jetsonpower-gui-tools*.deb \
+          nvidia-l4t-libwayland-client0*.deb \
+          nvidia-l4t-dgpu-tools*.deb \
+          nvidia-l4t-dgpu-config*.deb \
+          nvidia-l4t-dgpu-apt-source*.deb \
+          nvidia-l4t-graphics-demos*.deb \
+          nvidia-l4t-libwayland-cursor0*.deb \
+          nvidia-l4t-vulkan-sc-sdk*.deb \
+          nvidia-l4t-wayland*.deb \
+          nvidia-l4t-vulkan-sc-dev*.deb \
+          nvidia-l4t-vulkan-sc-samples*.deb \
+          nvidia-l4t-vulkan-sc*.deb \
+          nvidia-l4t-pva*.deb \
+          nvidia-l4t-factory-service*.deb \
+          nvidia-l4t-x11*.deb \
+          nvidia-l4t-3d-core*.deb \
+          nvidia-l4t-openwfd*.deb \
+          nvidia-l4t-gbm*.deb \
+          nvidia-l4t-jetson-io*.deb \
+          nvidia-l4t-weston*.deb \
+          nvidia-l4t-multimedia*.deb \
+          nvidia-l4t-multimedia-utils*.deb \
+          nvidia-l4t-nvpmodel-gui-tools*.deb
 
     - name: Add docker packages to rootfs
       run: |
-        cd $GITHUB_WORKSPACE/Linux_for_Tegra
+        set -eux
+        cd "$GITHUB_WORKSPACE/Linux_for_Tegra"
 
-        # Install additional packages in rootfs using chroot
+        CHROOT="$(pwd)/rootfs"
+
+        # copy qemu-user static for aarch64 chroot execution
         echo "Setting up chroot environment..."
-        sudo cp /usr/bin/qemu-aarch64-static rootfs/usr/bin/
+        sudo mkdir -p "$CHROOT/usr/bin"
+        sudo cp /usr/bin/qemu-aarch64-static "$CHROOT/usr/bin/" || true
 
-        # Mount necessary filesystems for chroot
-        sudo mount --bind /dev rootfs/dev/
-        sudo mount --bind /sys rootfs/sys/
-        sudo mount --bind /proc rootfs/proc/
-        sudo mount --bind /dev/pts rootfs/dev/pts/
+        # Mount pseudo filesystems for chroot
+        for m in proc sys dev dev/pts run; do
+          sudo mkdir -p "$CHROOT/$m"
+          sudo mount --bind "/$m" "$CHROOT/$m" || true
+        done
 
-        # Copy resolv.conf for network access in chroot
-        sudo mv rootfs/etc/resolv.conf rootfs/etc/resolv.conf.bak
-        sudo cp /etc/resolv.conf rootfs/etc/resolv.conf
+        # Backup and copy resolv.conf (if present)
+        if [ -f "$CHROOT/etc/resolv.conf" ]; then
+          sudo mv "$CHROOT/etc/resolv.conf" "$CHROOT/etc/resolv.conf.bak" || true
+        fi
+        sudo cp /etc/resolv.conf "$CHROOT/etc/resolv.conf" || true
 
-        sudo install -m 0755 -d rootfs/etc/apt/keyrings
-        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/apt/keyrings/docker.asc
-        sudo curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey -o $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/apt/keyrings/nvidia-container-toolkit.asc
-        sudo chmod a+r $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/apt/keyrings/docker.asc
-        sudo chmod a+r $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/apt/keyrings/nvidia-container-toolkit.asc
+        # seed fake-hwclock in chroot (assumes package already installed in chroot)
+        sudo chroot $CHROOT /bin/bash -ex <<'CH'
+          # seed with builder time
+          DEBIAN_FRONTEND=noninteractive fake-hwclock save || true
+        CH
+
+        # If the package-provided fake-hwclock systemd unit exists, enable it in the image
+        if [ -f "$CHROOT/lib/systemd/system/fake-hwclock.service" ] || [ -f "$CHROOT/usr/lib/systemd/system/fake-hwclock.service" ]; then
+          sudo mkdir -p "$CHROOT/etc/systemd/system/sysinit.target.wants"
+          if [ -f "$CHROOT/lib/systemd/system/fake-hwclock.service" ]; then
+            sudo ln -sf /lib/systemd/system/fake-hwclock.service "$CHROOT/etc/systemd/system/sysinit.target.wants/fake-hwclock.service"
+          else
+            sudo ln -sf /usr/lib/systemd/system/fake-hwclock.service "$CHROOT/etc/systemd/system/sysinit.target.wants/fake-hwclock.service"
+          fi
+        fi
+
+        # Check fake-hwclock file exists and looks sane (YYYY-MM-DD HH:MM:SS)
+        if [ -f "$CHROOT/etc/fake-hwclock.data" ]; then
+          echo "/etc/fake-hwclock.data:"
+          sudo cat "$CHROOT/etc/fake-hwclock.data"
+        else
+          echo "WARNING: /etc/fake-hwclock.data not found"
+        fi
+        # Quick check: run 'date' inside chroot (will show host time)
+        sudo chroot "$CHROOT" date -u -R
+
+        # Add apt keyrings / repos for docker & nvidia
+        sudo mkdir -p "$CHROOT/usr/bin" "$CHROOT/etc/apt/keyrings"
+        sudo install -m 0755 -d $CHROOT/etc/apt/keyrings
+        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o $CHROOT/etc/apt/keyrings/docker.asc
+        sudo curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey -o $CHROOT/etc/apt/keyrings/nvidia-container-toolkit.asc
+        sudo chmod a+r $CHROOT/etc/apt/keyrings/docker.asc
+        sudo chmod a+r $CHROOT/etc/apt/keyrings/nvidia-container-toolkit.asc
         echo \
           "deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu jammy stable" | \
-          sudo tee $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/apt/sources.list.d/docker.list > /dev/null
+          sudo tee $CHROOT/etc/apt/sources.list.d/docker.list > /dev/null
         echo \
           "deb [signed-by=/etc/apt/keyrings/nvidia-container-toolkit.asc] https://nvidia.github.io/libnvidia-container/stable/deb/arm64 /" | \
-          sudo tee $GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null
+          sudo tee $CHROOT/etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null
 
-        pushd "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs"
-
+        # Install docker packages inside the chroot
+        pushd "$CHROOT"
+        echo "/etc/resolv.conf"
+        cat /etc/resolv.conf
+        echo "apt get update"
         LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt-get update
         LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin nvidia-container-toolkit
         LC_ALL=C PYTHONHASHSEED=0 sudo chroot . pip3 install -U "setuptools<71.0.0"
         LC_ALL=C PYTHONHASHSEED=0 sudo chroot . sudo pip3 install -U jetson-stats || true
-
         popd
-
-        echo "Removing QEMU binary from rootfs"
-        sudo rm -f "$GITHUB_WORKSPACE/Linux_for_Tegra/rootfs/usr/bin/qemu-aarch64-static"
-
         echo "Docker package installation completed!"
 
-        # Clean up chroot
-        sudo rm -f rootfs/etc/resolv.conf
-        sudo mv rootfs/etc/resolv.conf.bak rootfs/etc/resolv.conf
+        # restore resolv.conf and cleanup
+        sudo rm -f "$CHROOT/etc/resolv.conf"
+        if [ -f "$CHROOT/etc/resolv.conf.bak" ]; then
+          sudo mv "$CHROOT/etc/resolv.conf.bak" "$CHROOT/etc/resolv.conf" || true
+        fi
 
-        # Unmount filesystems
-        sudo umount rootfs/dev/pts/ || true
-        sudo umount rootfs/proc/ || true
-        sudo umount rootfs/sys/ || true
-        sudo umount rootfs/dev/ || true
-        # fi
+        # Unmount filesystems (use lazy unmount to avoid hung mounts)
+        echo "Unmount filesystems..."
+        for m in run dev/pts dev sys proc; do
+          sudo umount -l "$CHROOT/$m" || true
+        done
 
+        # Remove QEMU binary from rootfs (after unmount)
+        echo "Removing QEMU binary from rootfs..."
+        sudo rm -f "$CHROOT/usr/bin/qemu-aarch64-static" || true
 
     - name: Add docker default runtime
       run: |
@@ -389,9 +426,7 @@ jobs:
         echo "Compressing image for upload..."
 
         # Compress with pigz
-        # pigz -8 -p $(nproc) "${IMAGE_NAME}"
-        pigz -c "${IMAGE_NAME}" | \
-            split -b 600M -d - "${IMAGE_NAME}.gz."
+        pigz -6 -p $(nproc) "${IMAGE_NAME}"
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -399,20 +434,8 @@ jobs:
         name: jetson-orin-nano-image-${{ github.run_number }}
         path: |
           ${{ env.IMAGE_NAME }}.gz
-          ${{ env.IMAGE_NAME }}.gz.00
-          ${{ env.IMAGE_NAME }}.gz.01
-          ${{ env.IMAGE_NAME }}.gz.02
-          ${{ env.IMAGE_NAME }}.gz.03
-          ${{ env.IMAGE_NAME }}.gz.04
-          ${{ env.IMAGE_NAME }}.gz.05
-          ${{ env.IMAGE_NAME }}.gz.06
-          ${{ env.IMAGE_NAME }}.gz.07
-          ${{ env.IMAGE_NAME }}.gz.08
-          ${{ env.IMAGE_NAME }}.gz.09
-          ${{ env.IMAGE_NAME }}.gz.10
           ${{ env.IMAGE_NAME }}.sha256
           ${{ env.IMAGE_NAME }}.info
-          l4t_create_default_user.sh
         retention-days: 30
 
     - name: Upload Image as Release Asset
@@ -423,7 +446,6 @@ jobs:
           ${{ env.IMAGE_NAME }}.gz
           ${{ env.IMAGE_NAME }}.sha256
           ${{ env.IMAGE_NAME }}.info
-          l4t_create_default_user.sh
         body: |
           ## Jetson ${{ env.IMAGE_TYPE }} Image
 
@@ -453,22 +475,22 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Upload All Split Files as Release Assets
-      if: startsWith(github.ref, 'refs/tags/')
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        TAG_NAME: ${{ github.ref_name }}
-        REPO: ${{ github.repository }}
-      run: |
-        for i in $(seq -w 00 99); do
-          FILE="${{ env.IMAGE_NAME }}.gz.${i}"
-          if [ -f "$FILE" ]; then
-            echo "Uploading $FILE..."
-            gh release upload "$TAG_NAME" "$FILE" --repo "$REPO" --clobber
-          else
-            echo "Skipping missing file: $FILE"
-          fi
-        done
+    # - name: Upload All Split Files as Release Assets
+    #   if: startsWith(github.ref, 'refs/tags/')
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #     TAG_NAME: ${{ github.ref_name }}
+    #     REPO: ${{ github.repository }}
+    #   run: |
+    #     for i in $(seq -w 00 99); do
+    #       FILE="${{ env.IMAGE_NAME }}.gz.${i}"
+    #       if [ -f "$FILE" ]; then
+    #         echo "Uploading $FILE..."
+    #         gh release upload "$TAG_NAME" "$FILE" --repo "$REPO" --clobber
+    #       else
+    #         echo "Skipping missing file: $FILE"
+    #       fi
+    #     done
 
     # - name: Cleanup workspace
     #   if: always()
@@ -481,6 +503,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Publish draft as release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: eregon/publish-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
