@@ -266,17 +266,18 @@ jobs:
         #   "deb [signed-by=/etc/apt/keyrings/nvidia-container-toolkit.asc] https://nvidia.github.io/libnvidia-container/stable/deb/arm64 /" | \
         #   sudo tee $CHROOT/etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null
 
-        # Install docker packages inside the chroot
-        pushd "$CHROOT"
-        echo "/etc/resolv.conf"
-        cat /etc/resolv.conf
-        echo "apt get update"
-        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt update
-        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin nvidia-container-toolkit
-        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . pip3 install -U "setuptools<71.0.0"
-        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . sudo pip3 install -U jetson-stats || true
-        popd
-        echo "Docker package installation completed!"
+        #temp debug
+        # # Install docker packages inside the chroot
+        # pushd "$CHROOT"
+        # echo "/etc/resolv.conf"
+        # cat /etc/resolv.conf
+        # echo "apt get update"
+        # LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt update
+        # LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin nvidia-container-toolkit
+        # LC_ALL=C PYTHONHASHSEED=0 sudo chroot . pip3 install -U "setuptools<71.0.0"
+        # LC_ALL=C PYTHONHASHSEED=0 sudo chroot . sudo pip3 install -U jetson-stats || true
+        # popd
+        # echo "Docker package installation completed!"
 
         # restore resolv.conf and cleanup
         sudo rm -f "$CHROOT/etc/resolv.conf"
