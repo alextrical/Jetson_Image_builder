@@ -120,7 +120,7 @@ jobs:
           qemu-user-binfmt \
           xmlstarlet
 
-    -	name: Register qemu binfmt
+    - name: Register qemu binfmt
       run: |
         sudo update-binfmts --enable qemu-aarch64
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
