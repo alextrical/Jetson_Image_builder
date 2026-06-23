@@ -44,11 +44,11 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: Cache L4T BSP and Sample Root FS
       id: cache-bsp
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
         key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
@@ -74,7 +74,7 @@ jobs:
       - name: Create draft
         if: startsWith(github.ref, 'refs/tags/')
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
@@ -120,7 +120,7 @@ jobs:
           xmlstarlet
 
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: Set up QEMU for ARM64 emulation
       run: |
@@ -129,7 +129,7 @@ jobs:
 
     - name: Restore Cached L4T BSP
       id: cache-bsp
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ${{ github.workspace }}/Linux_for_Tegra.tar.zst
         key: bsp-${{ env.L4T_MAJOR_VERSION }}.${{ env.L4T_MINOR_VERSION }}
@@ -220,11 +220,15 @@ jobs:
         fi
         sudo cp /etc/resolv.conf "$CHROOT/etc/resolv.conf" || true
 
-        # seed fake-hwclock in chroot (assumes package already installed in chroot)
-        sudo chroot $CHROOT /bin/bash -ex <<'CH'
-          # seed with builder time
-          DEBIAN_FRONTEND=noninteractive fake-hwclock save || true
-        CH
+        # # seed fake-hwclock in chroot (assumes package already installed in chroot)
+        # sudo chroot $CHROOT /bin/bash -ex <<'CH'
+        #   # seed with builder time
+        #   DEBIAN_FRONTEND=noninteractive fake-hwclock save || true
+        # CH
+        sudo chroot "$CHROOT" /usr/bin/env -i \
+          DEBIAN_FRONTEND=noninteractive \
+          PATH=/usr/sbin:/usr/bin:/sbin:/bin \
+          fake-hwclock save || true
 
         # If the package-provided fake-hwclock systemd unit exists, enable it in the image
         if [ -f "$CHROOT/lib/systemd/system/fake-hwclock.service" ] || [ -f "$CHROOT/usr/lib/systemd/system/fake-hwclock.service" ]; then
@@ -432,7 +436,7 @@ jobs:
         pigz -6 -p $(nproc) "${IMAGE_NAME}"
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: jetson-orin-nano-image-${{ github.run_number }}
         path: |
@@ -443,7 +447,7 @@ jobs:
 
     - name: Upload Image as Release Asset
       if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         files: |
           ${{ env.IMAGE_NAME }}.gz
