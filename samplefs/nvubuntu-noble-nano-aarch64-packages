@@ -1,6 +1,5 @@
 libegl1
 libexpat1
-python2
 python3
 bridge-utils
 device-tree-compiler
