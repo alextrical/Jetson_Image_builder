@@ -220,35 +220,35 @@ jobs:
         fi
         sudo cp /etc/resolv.conf "$CHROOT/etc/resolv.conf" || true
 
-        # # seed fake-hwclock in chroot (assumes package already installed in chroot)
-        # sudo chroot $CHROOT /bin/bash -ex <<'CH'
-        #   # seed with builder time
-        #   DEBIAN_FRONTEND=noninteractive fake-hwclock save || true
-        # CH
-        sudo chroot "$CHROOT" /usr/bin/env -i \
-          DEBIAN_FRONTEND=noninteractive \
-          PATH=/usr/sbin:/usr/bin:/sbin:/bin \
-          fake-hwclock save || true
+        # # # seed fake-hwclock in chroot (assumes package already installed in chroot)
+        # # sudo chroot $CHROOT /bin/bash -ex <<'CH'
+        # #   # seed with builder time
+        # #   DEBIAN_FRONTEND=noninteractive fake-hwclock save || true
+        # # CH
+        # sudo chroot "$CHROOT" /usr/bin/env -i \
+        #   DEBIAN_FRONTEND=noninteractive \
+        #   PATH=/usr/sbin:/usr/bin:/sbin:/bin \
+        #   fake-hwclock save || true
 
-        # If the package-provided fake-hwclock systemd unit exists, enable it in the image
-        if [ -f "$CHROOT/lib/systemd/system/fake-hwclock.service" ] || [ -f "$CHROOT/usr/lib/systemd/system/fake-hwclock.service" ]; then
-          sudo mkdir -p "$CHROOT/etc/systemd/system/sysinit.target.wants"
-          if [ -f "$CHROOT/lib/systemd/system/fake-hwclock.service" ]; then
-            sudo ln -sf /lib/systemd/system/fake-hwclock.service "$CHROOT/etc/systemd/system/sysinit.target.wants/fake-hwclock.service"
-          else
-            sudo ln -sf /usr/lib/systemd/system/fake-hwclock.service "$CHROOT/etc/systemd/system/sysinit.target.wants/fake-hwclock.service"
-          fi
-        fi
+        # # If the package-provided fake-hwclock systemd unit exists, enable it in the image
+        # if [ -f "$CHROOT/lib/systemd/system/fake-hwclock.service" ] || [ -f "$CHROOT/usr/lib/systemd/system/fake-hwclock.service" ]; then
+        #   sudo mkdir -p "$CHROOT/etc/systemd/system/sysinit.target.wants"
+        #   if [ -f "$CHROOT/lib/systemd/system/fake-hwclock.service" ]; then
+        #     sudo ln -sf /lib/systemd/system/fake-hwclock.service "$CHROOT/etc/systemd/system/sysinit.target.wants/fake-hwclock.service"
+        #   else
+        #     sudo ln -sf /usr/lib/systemd/system/fake-hwclock.service "$CHROOT/etc/systemd/system/sysinit.target.wants/fake-hwclock.service"
+        #   fi
+        # fi
 
-        # Check fake-hwclock file exists and looks sane (YYYY-MM-DD HH:MM:SS)
-        if [ -f "$CHROOT/etc/fake-hwclock.data" ]; then
-          echo "/etc/fake-hwclock.data:"
-          sudo cat "$CHROOT/etc/fake-hwclock.data"
-        else
-          echo "WARNING: /etc/fake-hwclock.data not found"
-        fi
-        # Quick check: run 'date' inside chroot (will show host time)
-        sudo chroot "$CHROOT" date -u -R
+        # # Check fake-hwclock file exists and looks sane (YYYY-MM-DD HH:MM:SS)
+        # if [ -f "$CHROOT/etc/fake-hwclock.data" ]; then
+        #   echo "/etc/fake-hwclock.data:"
+        #   sudo cat "$CHROOT/etc/fake-hwclock.data"
+        # else
+        #   echo "WARNING: /etc/fake-hwclock.data not found"
+        # fi
+        # # Quick check: run 'date' inside chroot (will show host time)
+        # sudo chroot "$CHROOT" date -u -R
 
         # Add apt keyrings / repos for docker & nvidia
         sudo mkdir -p "$CHROOT/usr/bin" "$CHROOT/etc/apt/keyrings"
