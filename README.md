@@ -258,7 +258,7 @@ sudo ufw allow ssh
 ### Image Size Reduction
 
 - Remove unused packages in `custom-packages.list`
-- Clean package caches: `apt-get clean && rm -rf /var/lib/apt/lists/*`
+- Clean package caches: `apt clean && rm -rf /var/lib/apt/lists/*`
 - Remove development headers if not needed
 
 ### Build Time Optimization

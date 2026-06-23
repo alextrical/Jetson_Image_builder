@@ -1,16 +1,16 @@
 #!/bin/bash
 export DEBIAN_FRONTEND=noninteractive
-apt-get update
+apt update
 
 
 
 # install all latest packages
-# apt-get upgrade -y
+# apt upgrade -y
 
 # Clean up
-apt-get autoremove -y
-apt-get autoclean
-apt-get clean
+apt autoremove -y
+apt autoclean
+apt clean
 rm -rf /var/lib/apt/lists/* \
   /tmp/ \
   /var/tmp/* \

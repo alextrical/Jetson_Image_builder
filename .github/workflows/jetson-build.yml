@@ -108,8 +108,8 @@ jobs:
 
     - name: Install dependencies on host
       run: |
-        sudo apt-get update
-        sudo apt-get install -y \
+        sudo apt update
+        sudo apt install -y \
           lbzip2 \
           ntpdate \
           libncurses5-dev \
@@ -271,8 +271,8 @@ jobs:
         echo "/etc/resolv.conf"
         cat /etc/resolv.conf
         echo "apt get update"
-        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt-get update
-        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin nvidia-container-toolkit
+        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt update
+        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin nvidia-container-toolkit
         LC_ALL=C PYTHONHASHSEED=0 sudo chroot . pip3 install -U "setuptools<71.0.0"
         LC_ALL=C PYTHONHASHSEED=0 sudo chroot . sudo pip3 install -U jetson-stats || true
         popd

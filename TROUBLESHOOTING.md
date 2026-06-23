@@ -9,7 +9,7 @@
 **Solutions**:
 ```bash
 # Check if QEMU is properly installed
-sudo apt-get install qemu-user-static binfmt-support
+sudo apt install qemu-user-static binfmt-support
 sudo update-binfmts --enable qemu-aarch64
 
 # Verify rootfs permissions
