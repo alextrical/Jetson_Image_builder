@@ -143,12 +143,12 @@ jobs:
         echo "Remove cache file..."
         rm ${{ github.workspace }}/Linux_for_Tegra.tar.zst
 
-    - name: Patch files
-      run: |
-        #Update base image
-        sed -i 's|ubuntu-base-22.04.2-base-arm64.tar.gz|ubuntu-base-22.04.5-base-arm64.tar.gz|g' ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-aarch64-samplefs
-        # Move rootFS Folder instead of creating tarball
-        sed -i 's|sudo tar --numeric-owner -jcpf "${output_samplefs}" \*|sudo mv ./* '"${{ github.workspace }}"'/Linux_for_Tegra/rootfs|' ./Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh
+    # - name: Patch files
+    #   run: |
+    #     #Update base image
+    #     sed -i 's|ubuntu-base-22.04.2-base-arm64.tar.gz|ubuntu-base-22.04.5-base-arm64.tar.gz|g' ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-aarch64-samplefs
+    #     # Move rootFS Folder instead of creating tarball
+    #     sed -i 's|sudo tar --numeric-owner -jcpf "${output_samplefs}" \*|sudo mv ./* '"${{ github.workspace }}"'/Linux_for_Tegra/rootfs|' ./Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh
 
     - name: Copy files
       run: |
