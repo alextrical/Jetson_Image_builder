@@ -11,13 +11,13 @@ on:
   workflow_dispatch:
     inputs:
       l4t_major_version:
-        description: 'L4T Version (default: 36)'
+        description: 'L4T Version (default: 39)'
         required: false
-        default: '36'
+        default: '39'
       l4t_minor_version:
-        description: 'L4T Version (default: 4.4)'
+        description: 'L4T Version (default: 2.0)'
         required: false
-        default: '4.4'
+        default: '2.0'
       image_type:
         description: 'Output image drive type (SD/USB/NVME)'
         required: false
@@ -31,8 +31,8 @@ on:
 #   contents: read
 
 env:
-  L4T_MAJOR_VERSION: "${{ github.event.env.L4T_MAJOR_VERSION || '36' }}"
-  L4T_MINOR_VERSION: "${{ github.event.env.L4T_MINOR_VERSION || '4.4' }}"
+  L4T_MAJOR_VERSION: "${{ github.event.env.L4T_MAJOR_VERSION || '39' }}"
+  L4T_MINOR_VERSION: "${{ github.event.env.L4T_MINOR_VERSION || '2.0' }}"
   IMAGE_TYPE: "${{ github.event.inputs.image_type || 'NVME' }}"
   JETSON_TYPE: "${{ github.event.inputs.jetson_type || 'jetson-orin-nano-devkit-super' }}"
   OEM_USER: "nexus"
@@ -40,7 +40,7 @@ env:
 jobs:
   cache-jetson-downloads:
     # runs-on: self-hosted
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
     - name: Checkout repository
@@ -85,7 +85,7 @@ jobs:
 
   build-jetson-image:
     # runs-on: self-hosted
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: [cache-jetson-downloads, create-draft]
 
     steps:
