@@ -146,20 +146,20 @@ jobs:
     # - name: Patch files
     #   run: |
     #     #Update base image
-    #     sed -i 's|ubuntu-base-22.04.2-base-arm64.tar.gz|ubuntu-base-22.04.5-base-arm64.tar.gz|g' ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-aarch64-samplefs
+    #     sed -i 's|ubuntu-base-22.04.2-base-arm64.tar.gz|ubuntu-base-22.04.5-base-arm64.tar.gz|g' ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-noble-aarch64-samplefs
     #     # Move rootFS Folder instead of creating tarball
     #     sed -i 's|sudo tar --numeric-owner -jcpf "${output_samplefs}" \*|sudo mv ./* '"${{ github.workspace }}"'/Linux_for_Tegra/rootfs|' ./Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh
 
     - name: Copy files
       run: |
         #Copy package list for RootFS
-        cp samplefs/nvubuntu-jammy-nano-aarch64-packages ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-jammy-nano-aarch64-packages
+        cp samplefs/nvubuntu-noble-nano-aarch64-packages ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-noble-nano-aarch64-packages
 
 
     - name: Create Ubuntu RootFS
       run: |
         sudo rm -rf ${{ github.workspace }}/Linux_for_Tegra/rootfs/*
-        sudo ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh --abi aarch64 --distro ubuntu --flavor nano --version jammy
+        sudo ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh --abi aarch64 --distro ubuntu --flavor nano --version noble
 
     - name: remove packages we don't want to install
       run: |
@@ -252,7 +252,7 @@ jobs:
         sudo chmod a+r $CHROOT/etc/apt/keyrings/docker.asc
         sudo chmod a+r $CHROOT/etc/apt/keyrings/nvidia-container-toolkit.asc
         echo \
-          "deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu jammy stable" | \
+          "deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable" | \
           sudo tee $CHROOT/etc/apt/sources.list.d/docker.list > /dev/null
         echo \
           "deb [signed-by=/etc/apt/keyrings/nvidia-container-toolkit.asc] https://nvidia.github.io/libnvidia-container/stable/deb/arm64 /" | \
