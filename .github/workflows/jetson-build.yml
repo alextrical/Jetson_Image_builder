@@ -153,6 +153,8 @@ jobs:
     - name: Copy files
       run: |
         #Copy package list for RootFS
+        ls samplefs
+        ls samplefs/nvubuntu-noble-nano-aarch64-packages
         cp samplefs/nvubuntu-noble-nano-aarch64-packages ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-noble-nano-aarch64-packages
 
 
