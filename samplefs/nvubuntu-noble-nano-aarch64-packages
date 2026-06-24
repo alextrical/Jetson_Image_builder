@@ -107,3 +107,7 @@ ffmpeg
 ca-certificates
 jq
 net-tools
+
+xxd
+i2c-tools
+rsync
