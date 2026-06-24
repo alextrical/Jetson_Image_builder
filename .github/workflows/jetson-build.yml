@@ -143,10 +143,13 @@ jobs:
         echo "Remove cache file..."
         rm ${{ github.workspace }}/Linux_for_Tegra.tar.zst
 
-    - name: Patch files
+    - name: Patch to nvidia script - update ubuntu base
       run: |
-        # #Update base image
-        # sed -i 's|ubuntu-base-24.04.3-base-arm64.tar.gz|ubuntu-base-24.04.4-base-arm64.tar.gz|g' ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-noble-aarch64-samplefs
+        #Update base image
+        sed -i 's|ubuntu-base-24.04.3-base-arm64.tar.gz|ubuntu-base-24.04.4-base-arm64.tar.gz|g' ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nvubuntu-noble-aarch64-samplefs
+
+    - name: Patch to nvidia script - output rootfs to folder
+      run: |
         # Move rootFS Folder instead of creating tarball
         sed -i 's|sudo tar --numeric-owner -jcpf "${output_samplefs}" \*|sudo mv ./* '"${{ github.workspace }}"'/Linux_for_Tegra/rootfs|' ${{ github.workspace }}/Linux_for_Tegra/tools/samplefs/nv_build_samplefs.sh
 
@@ -218,36 +221,31 @@ jobs:
         fi
         sudo cp /etc/resolv.conf "$CHROOT/etc/resolv.conf" || true
 
-        #temp debug
-        # # # seed fake-hwclock in chroot (assumes package already installed in chroot)
-        # # sudo chroot $CHROOT /bin/bash -ex <<'CH'
-        # #   # seed with builder time
-        # #   DEBIAN_FRONTEND=noninteractive fake-hwclock save || true
-        # # CH
-        # sudo chroot "$CHROOT" /usr/bin/env -i \
-        #   DEBIAN_FRONTEND=noninteractive \
-        #   PATH=/usr/sbin:/usr/bin:/sbin:/bin \
-        #   fake-hwclock save || true
+        # # seed fake-hwclock in chroot (assumes package already installed in chroot)
+        # sudo chroot $CHROOT /bin/bash -ex <<'CH'
+        #   # seed with builder time
+        #   DEBIAN_FRONTEND=noninteractive fake-hwclock save || true
+        # CH
 
-        # # If the package-provided fake-hwclock systemd unit exists, enable it in the image
-        # if [ -f "$CHROOT/lib/systemd/system/fake-hwclock.service" ] || [ -f "$CHROOT/usr/lib/systemd/system/fake-hwclock.service" ]; then
-        #   sudo mkdir -p "$CHROOT/etc/systemd/system/sysinit.target.wants"
-        #   if [ -f "$CHROOT/lib/systemd/system/fake-hwclock.service" ]; then
-        #     sudo ln -sf /lib/systemd/system/fake-hwclock.service "$CHROOT/etc/systemd/system/sysinit.target.wants/fake-hwclock.service"
-        #   else
-        #     sudo ln -sf /usr/lib/systemd/system/fake-hwclock.service "$CHROOT/etc/systemd/system/sysinit.target.wants/fake-hwclock.service"
-        #   fi
-        # fi
+        # If the package-provided fake-hwclock systemd unit exists, enable it in the image
+        if [ -f "$CHROOT/lib/systemd/system/fake-hwclock.service" ] || [ -f "$CHROOT/usr/lib/systemd/system/fake-hwclock.service" ]; then
+          sudo mkdir -p "$CHROOT/etc/systemd/system/sysinit.target.wants"
+          if [ -f "$CHROOT/lib/systemd/system/fake-hwclock.service" ]; then
+            sudo ln -sf /lib/systemd/system/fake-hwclock.service "$CHROOT/etc/systemd/system/sysinit.target.wants/fake-hwclock.service"
+          else
+            sudo ln -sf /usr/lib/systemd/system/fake-hwclock.service "$CHROOT/etc/systemd/system/sysinit.target.wants/fake-hwclock.service"
+          fi
+        fi
 
-        # # Check fake-hwclock file exists and looks sane (YYYY-MM-DD HH:MM:SS)
-        # if [ -f "$CHROOT/etc/fake-hwclock.data" ]; then
-        #   echo "/etc/fake-hwclock.data:"
-        #   sudo cat "$CHROOT/etc/fake-hwclock.data"
-        # else
-        #   echo "WARNING: /etc/fake-hwclock.data not found"
-        # fi
-        # # Quick check: run 'date' inside chroot (will show host time)
-        # sudo chroot "$CHROOT" date -u -R
+        # Check fake-hwclock file exists and looks sane (YYYY-MM-DD HH:MM:SS)
+        if [ -f "$CHROOT/etc/fake-hwclock.data" ]; then
+          echo "/etc/fake-hwclock.data:"
+          sudo cat "$CHROOT/etc/fake-hwclock.data"
+        else
+          echo "WARNING: /etc/fake-hwclock.data not found"
+        fi
+        # Quick check: run 'date' inside chroot (will show host time)
+        sudo chroot "$CHROOT" date -u -R
 
         # Add apt keyrings / repos for docker & nvidia
         sudo mkdir -p "$CHROOT/usr/bin" "$CHROOT/etc/apt/keyrings"
@@ -256,26 +254,25 @@ jobs:
         sudo curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey -o $CHROOT/etc/apt/keyrings/nvidia-container-toolkit.asc
         sudo chmod a+r $CHROOT/etc/apt/keyrings/docker.asc
         sudo chmod a+r $CHROOT/etc/apt/keyrings/nvidia-container-toolkit.asc
-        #temp debug
-        # echo \
-        #   "deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable" | \
-        #   sudo tee $CHROOT/etc/apt/sources.list.d/docker.list > /dev/null
-        # echo \
-        #   "deb [signed-by=/etc/apt/keyrings/nvidia-container-toolkit.asc] https://nvidia.github.io/libnvidia-container/stable/deb/arm64 /" | \
-        #   sudo tee $CHROOT/etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null
+        
+        echo \
+          "deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable" | \
+          sudo tee $CHROOT/etc/apt/sources.list.d/docker.list > /dev/null
+        echo \
+          "deb [signed-by=/etc/apt/keyrings/nvidia-container-toolkit.asc] https://nvidia.github.io/libnvidia-container/stable/deb/arm64 /" | \
+          sudo tee $CHROOT/etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null
 
-        #temp debug
-        # # Install docker packages inside the chroot
-        # pushd "$CHROOT"
-        # echo "/etc/resolv.conf"
-        # cat /etc/resolv.conf
-        # echo "apt get update"
-        # LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt update
-        # LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin nvidia-container-toolkit
-        # LC_ALL=C PYTHONHASHSEED=0 sudo chroot . pip3 install -U "setuptools<71.0.0"
-        # LC_ALL=C PYTHONHASHSEED=0 sudo chroot . sudo pip3 install -U jetson-stats || true
-        # popd
-        # echo "Docker package installation completed!"
+        # Install docker packages inside the chroot
+        pushd "$CHROOT"
+        echo "/etc/resolv.conf"
+        cat /etc/resolv.conf
+        echo "apt get update"
+        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt update
+        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin nvidia-container-toolkit
+        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . pip3 install -U "setuptools<71.0.0"
+        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . sudo pip3 install -U jetson-stats || true
+        popd
+        echo "Docker package installation completed!"
 
         # restore resolv.conf and cleanup
         sudo rm -f "$CHROOT/etc/resolv.conf"
