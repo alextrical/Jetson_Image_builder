@@ -221,11 +221,11 @@ jobs:
         fi
         sudo cp /etc/resolv.conf "$CHROOT/etc/resolv.conf" || true
 
-        # # seed fake-hwclock in chroot (assumes package already installed in chroot)
-        # sudo chroot $CHROOT /bin/bash -ex <<'CH'
-        #   # seed with builder time
-        #   DEBIAN_FRONTEND=noninteractive fake-hwclock save || true
-        # CH
+        # seed fake-hwclock in chroot (assumes package already installed in chroot)
+        sudo chroot $CHROOT /bin/bash -ex <<'CH'
+          # seed with builder time
+          DEBIAN_FRONTEND=noninteractive fake-hwclock save || true
+        CH
 
         # If the package-provided fake-hwclock systemd unit exists, enable it in the image
         if [ -f "$CHROOT/lib/systemd/system/fake-hwclock.service" ] || [ -f "$CHROOT/usr/lib/systemd/system/fake-hwclock.service" ]; then
