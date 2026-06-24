@@ -269,8 +269,8 @@ jobs:
         echo "apt get update"
         LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt update
         LC_ALL=C PYTHONHASHSEED=0 sudo chroot . apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin nvidia-container-toolkit
-        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . pip3 install -U "setuptools<71.0.0"
-        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . sudo pip3 install -U jetson-stats || true
+        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . pip3 install -U "setuptools<71.0.0" --break-system-packages
+        LC_ALL=C PYTHONHASHSEED=0 sudo chroot . sudo pip3 install -U jetson-stats --break-system-packages || true
         popd
         echo "Docker package installation completed!"
 
