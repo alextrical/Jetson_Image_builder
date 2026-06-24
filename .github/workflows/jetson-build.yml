@@ -188,7 +188,7 @@ jobs:
           nvidia-l4t-pva*.deb \
           nvidia-l4t-factory-service*.deb \
           nvidia-l4t-x11*.deb \
-          nvidia-l4t-xwayland \
+          nvidia-l4t-xwayland*.deb \
           nvidia-l4t-3d-core*.deb \
           nvidia-l4t-openwfd*.deb \
           nvidia-l4t-gbm*.deb \
